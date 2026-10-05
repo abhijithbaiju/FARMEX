@@ -1,0 +1,751 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block body %}
+<!-- Custom CSS for the dashboard -->
+<style>
+    body { background-color: #f8fafc !important; margin: 0; padding: 0; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+    
+    /* Hide the original navbar from base.html */
+    .navbar { display: none !important; }
+    
+    /* Sidebar */
+    .sidebar { width: 260px; height: 100vh; background-color: #0d3326; position: fixed; top: 0; left: 0; color: white; display: flex; flex-direction: column; z-index: 1000; }
+    .sidebar-logo { display: flex; align-items: center; padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
+    .sidebar-logo i { font-size: 1.8rem; margin-right: 12px; }
+    .sidebar-logo .brand-text { font-size: 1.3rem; font-weight: 700; line-height: 1.2; letter-spacing: 0.5px; }
+    .sidebar-logo .brand-sub { font-size: 0.75rem; color: #a0b8af; font-weight: 400; }
+    
+    .nav-item-custom { padding: 12px 20px; display: flex; align-items: center; color: #d1dfd9; text-decoration: none; font-weight: 500; font-size: 0.95rem; margin: 4px 12px; border-radius: 8px; transition: all 0.2s; position: relative; }
+    .nav-item-custom:hover { background-color: rgba(255,255,255,0.05); color: white; }
+    .nav-item-custom.active { background-color: #1a4a38; color: white; }
+    .nav-item-custom i { width: 20px; margin-right: 12px; font-size: 1.1rem; }
+    .nav-badge { position: absolute; right: 12px; background: #ef4444; color: white; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+    
+    .sidebar-footer { margin-top: auto; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden; }
+    .sidebar-footer-bg { position: absolute; bottom: 0; left: 0; width: 100%; opacity: 0.15; z-index: 0; }
+    .sidebar-footer-content { position: relative; z-index: 1; }
+    .sidebar-footer-text { font-size: 0.8rem; color: #d1dfd9; font-weight: 500; line-height: 1.5; margin-top: 10px; }
+
+    /* Main Content */
+    .main-content { margin-left: 260px; padding: 0 40px 40px; min-height: 100vh; display: flex; flex-direction: column; }
+    .main-content > .top-header { order: 1; }
+    .main-content > .page-title { order: 2; }
+    .main-content > .metrics-grid { order: 3; }
+    .main-content > #pending-companies { order: 4; }
+    .main-content > #company-list { order: 5; }
+    .main-content > #scheme-review { order: 6; }
+    .main-content > #category-management { order: 7; }
+    .main-content > .charts-grid { order: 9; }
+    .main-content > #farmer-list { order: 8; }
+    .main-content > .text-center.mt-5.mb-2 { order: 10; }
+    
+    /* Header */
+    .top-header { display: flex; justify-content: flex-end; align-items: center; padding: 20px 0; border-bottom: 1px solid #e2e8f0; margin-bottom: 30px; }
+    .header-right { display: flex; align-items: center; gap: 24px; }
+    .header-logout-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    .header-logout-btn:hover {
+        background: #fee2e2;
+        border-color: #fca5a5;
+        color: #b91c1c;
+    }
+    .header-icon { color: #64748b; font-size: 1.2rem; position: relative; cursor: pointer; }
+    .header-badge { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; font-size: 0.65rem; font-weight: bold; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .admin-profile { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .admin-avatar { width: 40px; height: 40px; border-radius: 50%; background: #0d3326; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1.2rem; }
+    .admin-info { display: flex; flex-direction: column; }
+    .admin-name { font-weight: 700; color: #1e293b; font-size: 0.95rem; }
+    .admin-role { font-size: 0.75rem; color: #64748b; }
+    
+    .page-title { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
+    .greeting h1 { font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+    .greeting p { color: #64748b; margin-bottom: 0; font-size: 0.95rem; }
+    .datetime { display: flex; gap: 20px; color: #475569; font-size: 0.9rem; font-weight: 500; background: white; padding: 10px 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .datetime div { display: flex; align-items: center; gap: 8px; }
+
+    /* Metric Cards */
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 30px; }
+    .mc { border-radius: 12px; padding: 24px; background: white; border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+    .mc-link { color: inherit; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; }
+    .mc-link:hover { color: inherit; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(15,23,42,0.1); }
+    
+    .mc-blue { border-top: 4px solid #3b82f6; }
+    .mc-blue .mc-icon { background-color: #3b82f6; color: white; }
+    
+    .mc-green { border-top: 4px solid #22c55e; }
+    .mc-green .mc-icon { background-color: #22c55e; color: white; }
+    
+    .mc-orange { border-top: 4px solid #f97316; }
+    .mc-orange .mc-icon { background-color: #f97316; color: white; }
+    
+    .mc-purple { border-top: 4px solid #a855f7; }
+    .mc-purple .mc-icon { background-color: #a855f7; color: white; }
+    
+    .mc-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .mc-title { font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .mc-value { font-size: 2.2rem; font-weight: 800; color: #0f172a; margin-bottom: 16px; line-height: 1; }
+    .mc-trend { font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 4px; color: #10b981; }
+    .mc-purple .mc-trend { color: #8b5cf6; }
+    
+    /* Cards (Tables & Charts) */
+    .dashboard-card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; padding: 24px; margin-bottom: 24px; }
+    .card-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .card-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 10px; margin: 0; }
+    .card-title i { color: #0d3326; font-size: 1.2rem; }
+    .card-header-actions { display: flex; justify-content: flex-end; align-items: center; gap: 14px; }
+    .dashboard-search { display: flex; align-items: center; width: min(300px, 42vw); min-width: 210px; }
+    .dashboard-search input { width: 100%; min-width: 0; height: 38px; padding: 7px 10px; color: #334155; background: #fff; border: 1px solid #d5e0d9; border-right: 0; border-radius: 7px 0 0 7px; font: inherit; font-size: .82rem; }
+    .dashboard-search input:focus { outline: 2px solid rgba(35,107,69,.2); border-color: #61956a; }
+    .dashboard-search button { width: 40px; height: 38px; color: #fff; background: #236b45; border: 1px solid #236b45; border-radius: 0 7px 7px 0; }
+    .dashboard-search button:hover { background: #185637; }
+    .view-all { color: #10b981; font-weight: 600; font-size: 0.85rem; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+    .view-all:hover { color: #059669; }
+
+    /* Custom Table */
+    .custom-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .custom-table th { background-color: #f8fafc; color: #475569; font-weight: 600; font-size: 0.8rem; padding: 12px 16px; text-align: left; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; border-top: 1px solid #e2e8f0; }
+    .custom-table th:first-child { border-top-left-radius: 8px; border-left: 1px solid #e2e8f0; }
+    .custom-table th:last-child { border-top-right-radius: 8px; border-right: 1px solid #e2e8f0; }
+    
+    .custom-table td { padding: 16px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: #334155; }
+    .custom-table tr:hover td { background-color: #f8fafc; }
+    
+    .company-cell { display: flex; align-items: center; gap: 12px; }
+    .company-icon { width: 32px; height: 32px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 1.1rem; }
+    .company-name { font-weight: 600; color: #0f172a; }
+    
+    .badge-soft-green { background-color: #ecfdf5; color: #059669; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+    .badge-soft-blue { background-color: #eff6ff; color: #2563eb; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+    .badge-soft-purple { background-color: #faf5ff; color: #9333ea; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+    
+    .doc-link { color: #64748b; text-decoration: none; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 0.85rem; }
+    .doc-link:hover { color: #0d3326; }
+    
+    .btn-action-view { background: #10b981; color: white; border: none; padding: 6px 16px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; text-decoration: none; transition: 0.2s; display: inline-block; }
+    .btn-action-view:hover { background: #059669; color: white; }
+    
+    .btn-action-reject { background: #ef4444; color: white; border: none; padding: 6px 16px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; text-decoration: none; transition: 0.2s; display: inline-block; margin-left: 8px; }
+    .btn-action-reject:hover { background: #dc2626; color: white; }
+    .company-block-form { min-width: 220px; }
+    .company-block-form textarea { width: 100%; min-height: 64px; margin-bottom: 6px; padding: 7px 9px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; font-size: 0.8rem; resize: vertical; }
+    .btn-action-block { background: #b91c1c; color: white; border: 0; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+    .btn-action-block:hover { background: #991b1b; }
+    .btn-action-block:disabled { background: #94a3b8; cursor: not-allowed; }
+    .company-review-details { min-width: 230px; }
+    .company-review-details summary { color: #2563eb; cursor: pointer; font-weight: 600; }
+    .company-review-content { min-width: 300px; padding: 12px; margin-top: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; }
+    .company-review-content dl { display: grid; grid-template-columns: minmax(120px, auto) minmax(140px, 1fr); gap: 6px 12px; margin: 0 0 10px; font-size: 0.82rem; }
+    .company-review-content dt { color: #64748b; font-weight: 600; }
+    .company-review-content dd { margin: 0; overflow-wrap: anywhere; }
+    .verification-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .verification-actions form { margin: 0; }
+    .category-add-form, .category-edit-form { display: flex; align-items: center; gap: 8px; }
+    .category-add-form input, .category-edit-form input { min-width: 180px; padding: 7px 9px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; }
+    .category-add-form button, .category-edit-form button { white-space: nowrap; }
+    .category-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    
+    /* Charts Grid */
+    .charts-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px; }
+    
+    .chart-container { height: 220px; display: flex; align-items: center; justify-content: center; position: relative; }
+    
+    .donut-legend { margin-left: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .legend-item { display: flex; align-items: center; font-size: 0.85rem; font-weight: 500; color: #475569; width: 110px; justify-content: space-between; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+    .legend-val { font-weight: 700; color: #0f172a; margin-left: auto; }
+    .legend-pct { color: #94a3b8; font-size: 0.75rem; margin-left: 12px; width: 35px; text-align: right; }
+    @media (max-width: 760px) {
+        .card-header-flex { align-items: flex-start; flex-wrap: wrap; }
+        .card-header-actions { width: 100%; justify-content: space-between; flex-wrap: wrap; }
+        .dashboard-search { width: 100%; min-width: 0; }
+    }
+</style>
+
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <i class="fas fa-leaf text-success"></i>
+        <div>
+            <div class="brand-text">FARMEX</div>
+            <div class="brand-sub">Subsidy Integrity Platform</div>
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <a href="#" class="nav-item-custom active"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="#pending-companies" class="nav-item-custom">
+            <i class="fas fa-building"></i> Company Verification
+            {% if pending_companies.count > 0 %}<span class="nav-badge">{{ pending_companies.count }}</span>{% endif %}
+        </a>
+        <a href="#farmer-list" class="nav-item-custom"><i class="fas fa-user-friends"></i> Manage Users</a>
+        <a href="#scheme-review" class="nav-item-custom"><i class="fas fa-file-invoice"></i> Manage Schemes</a>
+        <a href="#category-management" class="nav-item-custom"><i class="fas fa-tags"></i> Manage Categories</a>
+        <a href="{% url 'admin_farmer_reviews' %}" class="nav-item-custom"><i class="fas fa-star"></i> Farmer Reviews</a>
+        <a href="#company-list" class="nav-item-custom"><i class="fas fa-building"></i> Manage Companies</a>
+        <a href="{% url 'password_change' %}" class="nav-item-custom"><i class="fas fa-key"></i> Change Password</a>
+    </div>
+    
+    <div class="sidebar-footer">
+        <div class="sidebar-footer-bg">
+            <svg viewBox="0 0 100 50" preserveAspectRatio="none" style="height: 100%; width: 100%; fill: #a0b8af;">
+                <path d="M0,50 L0,30 Q25,20 50,30 T100,30 L100,50 Z"></path>
+                <path d="M0,50 L0,40 Q30,25 70,45 T100,35 L100,50 Z" style="fill: #ffffff; opacity: 0.2;"></path>
+            </svg>
+        </div>
+        <div class="sidebar-footer-content">
+            <i class="fas fa-tractor" style="font-size: 2.5rem; color: #a0b8af; opacity: 0.8;"></i>
+            <div class="sidebar-footer-text">
+                Ensuring Fair Subsidies<br>for a Sustainable<br>Agriculture
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="top-header">
+        <div class="header-right">
+            <a href="{% url 'logout' %}" class="header-logout-btn">Logout</a>
+            <div class="header-icon">
+                <i class="far fa-bell"></i>
+                <div class="header-badge">5</div>
+            </div>
+            <div class="admin-profile">
+                <div class="admin-avatar"><i class="far fa-user"></i></div>
+                <div class="admin-info">
+                    <span class="admin-name">Admin</span>
+                    <span class="admin-role">Administrator <i class="fas fa-chevron-down ms-1" style="font-size:0.6rem;"></i></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-title">
+        <div class="greeting">
+            <h1>Welcome, Admin!</h1>
+            <p>Here's an overview of the system status and recent activities.</p>
+        </div>
+        <div class="datetime">
+            <div><i class="far fa-calendar-alt"></i> <span id="current-date"></span></div>
+            <div><i class="far fa-clock"></i> <span id="current-time"></span></div>
+        </div>
+    </div>
+
+    <div class="metrics-grid">
+        <a class="mc mc-blue mc-link" href="#company-list" aria-label="Review all companies">
+            <div class="mc-icon"><i class="far fa-building"></i></div>
+            <div class="mc-title">Total Companies</div>
+            <div class="mc-value">{{ total_companies }}</div>
+            <div class="mc-trend"><i class="fas fa-arrow-right"></i> View company list</div>
+        </a>
+        <a class="mc mc-green mc-link" href="#farmer-list" aria-label="Review all farmers">
+            <div class="mc-icon"><i class="fas fa-user-friends"></i></div>
+            <div class="mc-title">Total Users</div>
+            <div class="mc-value">{{ total_farmers }}</div>
+            <div class="mc-trend"><i class="fas fa-arrow-right"></i> Review farmers</div>
+        </a>
+        <a class="mc mc-orange mc-link" href="#pending-companies" aria-label="View pending company verifications">
+            <div class="mc-icon"><i class="far fa-building"></i></div>
+            <div class="mc-title">Company Verification</div>
+            <div class="mc-value">{{ pending_companies.count }}</div>
+            <div class="mc-trend"><i class="fas fa-arrow-right"></i> View pending verifications</div>
+        </a>
+        <a class="mc mc-purple mc-link" href="#scheme-review" aria-label="Review schemes and feedback ratings">
+            <div class="mc-icon"><i class="fas fa-clipboard-check"></i></div>
+            <div class="mc-title">Total Applications</div>
+            <div class="mc-value">{{ total_applications }}</div>
+            <div class="mc-trend"><i class="fas fa-arrow-right"></i> Review scheme ratings</div>
+        </a>
+    </div>
+
+    <div class="dashboard-card" id="scheme-review">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fas fa-file-invoice"></i> Scheme Feedback Review</h2>
+            <form class="dashboard-search" method="get" action="{% url 'admin_dashboard' %}#scheme-review" role="search">
+                <label class="visually-hidden" for="scheme-dashboard-search">Search schemes</label>
+                <input id="scheme-dashboard-search" type="search" name="scheme_search" value="{{ scheme_search }}" placeholder="Search schemes or companies...">
+                <button type="submit" aria-label="Search schemes"><i class="fas fa-search" aria-hidden="true"></i></button>
+            </form>
+        </div>
+        <p class="text-muted small mb-3">Low ratings are 1 or 2 stars.</p>
+        <div style="overflow-x: auto;">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Scheme</th>
+                        <th>Average Rating</th>
+                        <th>Feedback Count</th>
+                        <th>Low Ratings</th>
+                        <th>Status</th>
+                        <th>Admin Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scheme in all_schemes %}
+                    <tr>
+                        <td>{{ scheme.company.company_name }}</td>
+                        <td>{{ scheme.name }}</td>
+                        <td>{% if scheme.avg_rating %}{{ scheme.avg_rating|floatformat:1 }} / 5{% else %}No feedback{% endif %}</td>
+                        <td>{{ scheme.feedback_count }}</td>
+                        <td>{{ scheme.low_feedback_count }}</td>
+                        <td>{% if scheme.is_active %}Active{% else %}<span class="text-danger">Blocked</span>{% endif %}</td>
+                        <td>
+                            {% if scheme.is_active %}
+                            <form class="company-block-form" method="post" action="{% url 'block_scheme' scheme.id %}">
+                                {% csrf_token %}
+                                {% if scheme.low_feedback_count %}
+                                <label class="visually-hidden" for="scheme-block-reason-{{ scheme.id }}">Reason for blocking {{ scheme.name }}</label>
+                                <textarea id="scheme-block-reason-{{ scheme.id }}" name="reason" required placeholder="Reason for blocking this low-rated scheme"></textarea>
+                                <button class="btn-action-block" type="submit" onclick="return confirm('Block scheme {{ scheme.name }}?')">Block scheme</button>
+                                {% else %}
+                                <button class="btn-action-block" type="button" disabled title="Requires at least one low rating (1 or 2 stars).">Block scheme</button>
+                                <span class="text-muted small">Requires a 1- or 2-star review</span>
+                                {% endif %}
+                            </form>
+                            {% else %}
+                            <button class="btn-action-block" type="button" disabled>Blocked</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center py-4 text-muted">No schemes have been created.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="dashboard-card" id="category-management">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fas fa-tags"></i> Farming Categories</h2>
+            <form class="category-add-form" method="post" action="{% url 'manage_category' %}#category-management">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add">
+                <label class="visually-hidden" for="new-category-name">New category name</label>
+                <input id="new-category-name" type="text" name="name" maxlength="50" placeholder="New category name" required>
+                <button class="btn-action-view" type="submit"><i class="fas fa-plus" aria-hidden="true"></i> Add category</button>
+            </form>
+        </div>
+        <p class="text-muted small mb-3">Categories are shared by farmer registration and company scheme eligibility. Deleting one removes it from associated farmer profiles and schemes.</p>
+        <div style="overflow-x: auto;">
+            <table class="custom-table">
+                <thead>
+                    <tr><th>Category</th><th>Usage</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                    <tr>
+                        <td>
+                            <form class="category-edit-form" method="post" action="{% url 'manage_category' %}#category-management">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="edit">
+                                <input type="hidden" name="category_id" value="{{ category.id }}">
+                                <label class="visually-hidden" for="category-name-{{ category.id }}">Rename {{ category.name }}</label>
+                                <input id="category-name-{{ category.id }}" type="text" name="name" value="{{ category.name }}" maxlength="50" required>
+                                <button class="btn-action-view" type="submit">Save</button>
+                            </form>
+                        </td>
+                        <td>{{ category.farmers.count }} farmers, {{ category.schemes.count }} schemes</td>
+                        <td>
+                            <form method="post" action="{% url 'manage_category' %}#category-management" onsubmit="return confirm('Delete {{ category.name }}? It will be removed from associated farmers and schemes.')">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="category_id" value="{{ category.id }}">
+                                <button class="btn-action-block" type="submit">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center py-4 text-muted">No farming categories are available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="dashboard-card" id="company-list">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="far fa-building"></i> Company Review</h2>
+            <div class="card-header-actions">
+                <span class="text-muted small">Low ratings are feedback scores of 1 or 2 stars.</span>
+                <form class="dashboard-search" method="get" action="{% url 'admin_dashboard' %}#company-list" role="search">
+                    <label class="visually-hidden" for="company-dashboard-search">Search companies</label>
+                    <input id="company-dashboard-search" type="search" name="company_search" value="{{ company_search }}" placeholder="Search companies...">
+                    <button type="submit" aria-label="Search companies"><i class="fas fa-search" aria-hidden="true"></i></button>
+                </form>
+            </div>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Email</th>
+                        <th>Approval</th>
+                        <th>Average Rating</th>
+                        <th>Low Ratings</th>
+                        <th>Account</th>
+                        <th>Admin Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in companies %}
+                    <tr>
+                        <td>{{ company.company_name }}</td>
+                        <td>{{ company.user.email }}</td>
+                        <td>{% if company.is_rejected %}<span class="text-danger">Rejected</span>{% elif company.is_approved %}Approved{% else %}Pending{% endif %}</td>
+                        <td>{% if company.average_feedback_rating %}{{ company.average_feedback_rating|floatformat:1 }} / 5{% else %}No feedback{% endif %}</td>
+                        <td>{{ company.negative_feedback_count }}</td>
+                        <td>{% if company.user.is_active %}Active{% else %}<span class="text-danger">Blocked</span>{% endif %}</td>
+                        <td>
+                            {% if company.user.is_active %}
+                            <form class="company-block-form" method="post" action="{% url 'block_company' company.id %}">
+                                {% csrf_token %}
+                                <label class="visually-hidden" for="block-reason-{{ company.id }}">Reason for blocking {{ company.company_name }}</label>
+                                <textarea id="block-reason-{{ company.id }}" name="reason" required placeholder="Reason: fraud, illegal activity, or feedback review"></textarea>
+                                <button class="btn-action-block" type="submit" onclick="return confirm('Block {{ company.company_name }}?')">Block company</button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted">No action</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center py-4 text-muted">No companies registered.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="dashboard-card" id="pending-companies">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="far fa-building"></i> Pending Company Verifications</h2>
+            <a href="#" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th width="5%">#</th>
+                        <th width="28%">Company</th>
+                        <th width="17%">GST Number</th>
+                        <th width="15%">Submitted On</th>
+                        <th width="35%">Review and Decision</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in pending_companies %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <div class="company-cell">
+                                <div class="company-icon"><i class="fas fa-leaf text-success"></i></div>
+                                <div>
+                                    <div class="company-name">{{ company.company_name }}</div>
+                                    <div class="small text-muted">{{ company.user.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-muted">{{ company.gst_number }}</td>
+                        <td>{{ company.created_at|date:"d M Y" }}</td>
+                        <td>
+                            <details class="company-review-details">
+                                <summary>Review details and documents</summary>
+                                <div class="company-review-content">
+                                    <dl>
+                                        <dt>Company name</dt><dd>{{ company.company_name }}</dd>
+                                        <dt>Phone number</dt><dd>{{ company.phone|default:"Not provided" }}</dd>
+                                        <dt>Registration number</dt><dd>{{ company.company_registration_number|default:"Not provided" }}</dd>
+                                        <dt>GST number</dt><dd>{{ company.gst_number }}</dd>
+                                        <dt>Country</dt><dd>{{ company.country|default:"Not provided" }}</dd>
+                                        <dt>State</dt><dd>{{ company.state|default:"Not provided" }}</dd>
+                                        <dt>Address</dt><dd>{{ company.address|default:"Not provided" }}</dd>
+                                        <dt>Pincode</dt><dd>{{ company.pincode|default:"Not provided" }}</dd>
+                                        <dt>Email</dt><dd>{{ company.user.email }}</dd>
+                                        <dt>Submitted</dt><dd>{{ company.created_at|date:"d M Y, H:i" }}</dd>
+                                    </dl>
+                                    <strong class="small">Uploaded documents</strong>
+                                    <ul class="small mb-0">
+                                        <li>{% if company.registration_document %}<a href="{{ company.registration_document.url }}" target="_blank" rel="noopener">Registration certificate</a>{% else %}<span class="text-danger">Registration certificate missing</span>{% endif %}</li>
+                                        <li>{% if company.gst_registration_certificate %}<a href="{{ company.gst_registration_certificate.url }}" target="_blank" rel="noopener">GST registration certificate</a>{% else %}<span class="text-danger">GST certificate missing</span>{% endif %}</li>
+                                        <li>{% if company.address_proof %}<a href="{{ company.address_proof.url }}" target="_blank" rel="noopener">Company address proof</a>{% else %}<span class="text-danger">Address proof missing</span>{% endif %}</li>
+                                    </ul>
+                                    {% if not company.registration_document or not company.gst_registration_certificate or not company.address_proof %}
+                                    <p class="text-danger small mt-2 mb-0">Approval is unavailable until all three documents are uploaded.</p>
+                                    {% endif %}
+                                </div>
+                            </details>
+                            <div class="verification-actions mt-2">
+                                <form method="post" action="{% url 'approve_company' company.id %}">
+                                    {% csrf_token %}
+                                    {% if company.registration_document and company.gst_registration_certificate and company.address_proof %}
+                                    <button type="submit" class="btn-action-view" onclick="return confirm('Approve {{ company.company_name }} after reviewing the details and documents?')">Approve</button>
+                                    {% else %}
+                                    <button type="button" class="btn-action-view" disabled title="All three verification documents are required before approval.">Approve</button>
+                                    {% endif %}
+                                </form>
+                                <form method="post" action="{% url 'reject_company' company.id %}">
+                                    {% csrf_token %}
+                                    <label class="visually-hidden" for="reject-reason-{{ company.id }}">Reason for rejecting {{ company.company_name }}</label>
+                                    <input id="reject-reason-{{ company.id }}" type="text" name="reason" required maxlength="500" placeholder="Rejection reason">
+                                    <button type="submit" class="btn-action-reject" onclick="return confirm('Reject {{ company.company_name }} and reserve its registration details?')">Reject</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">No pending company verifications.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="dashboard-card">
+            <div class="card-header-flex">
+                <h2 class="card-title"><i class="fas fa-file-contract"></i> Company Verification Requests</h2>
+            </div>
+            <div class="chart-container">
+                <div style="width: 160px; height: 160px;">
+                    <canvas id="donutChart"></canvas>
+                </div>
+                <div class="donut-legend">
+                    <div class="legend-item">
+                        <div style="display:flex; align-items:center;">
+                            <div class="legend-dot" style="background:#f59e0b;"></div> Pending
+                        </div>
+                        <span class="legend-val">3</span>
+                        <span class="legend-pct">25%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div style="display:flex; align-items:center;">
+                            <div class="legend-dot" style="background:#10b981;"></div> Approved
+                        </div>
+                        <span class="legend-val">7</span>
+                        <span class="legend-pct">58%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div style="display:flex; align-items:center;">
+                            <div class="legend-dot" style="background:#ef4444;"></div> Rejected
+                        </div>
+                        <span class="legend-val">2</span>
+                        <span class="legend-pct">17%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-card" id="manage-schemes">
+            <div class="card-header-flex">
+                <h2 class="card-title"><i class="fas fa-file-invoice"></i> Scheme Overview</h2>
+                <a href="#" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="chart-container" style="height: 180px;">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-card" id="farmer-list">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fas fa-user-friends"></i> Farmer Review</h2>
+            <div class="card-header-actions">
+                <span class="text-muted small">Three or more company red flags require admin review.</span>
+                <form class="dashboard-search" method="get" action="{% url 'admin_dashboard' %}#farmer-list" role="search">
+                    <label class="visually-hidden" for="farmer-dashboard-search">Search farmers</label>
+                    <input id="farmer-dashboard-search" type="search" name="farmer_search" value="{{ farmer_search }}" placeholder="Search farmers...">
+                    <button type="submit" aria-label="Search farmers"><i class="fas fa-search" aria-hidden="true"></i></button>
+                </form>
+            </div>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Farmer Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Red Flags</th>
+                        <th>Account</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for farmer in farmers %}
+                    <tr>
+                        <td><strong>{{ farmer.full_name }}</strong></td>
+                        <td>{{ farmer.user.email }}</td>
+                        <td>{{ farmer.phone }}</td>
+                        <td>
+                            {% if farmer.redflag_count >= 3 %}
+                            <span class="badge-soft-purple text-danger">{{ farmer.redflag_count }} - Review required</span>
+                            {% else %}
+                            <span>{{ farmer.redflag_count }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{% if farmer.user.is_active %}Active{% else %}<span class="text-danger">Blocked</span>{% endif %}</td>
+                        <td>
+                            {% if farmer.user.is_active %}
+                            <form class="company-block-form" method="post" action="{% url 'block_farmer' farmer.id %}">
+                                {% csrf_token %}
+                                <label class="visually-hidden" for="farmer-block-reason-{{ farmer.id }}">Reason for blocking {{ farmer.full_name }}</label>
+                                <textarea id="farmer-block-reason-{{ farmer.id }}" name="reason" required placeholder="Reason: fraud, illegal activity, or red-flag review"></textarea>
+                                <button class="btn-action-block" type="submit" onclick="return confirm('Block {{ farmer.full_name }}?')">Block farmer</button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted">No action</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center py-4 text-muted">No farmers registered.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="text-center mt-5 mb-2" style="font-size: 0.8rem; color: #64748b;">
+        &copy; 2026 Farmex. All rights reserved. &nbsp;&nbsp;&nbsp;&nbsp; Privacy Policy &nbsp;|&nbsp; Terms of Service &nbsp;|&nbsp; Help
+    </div>
+
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Date & Time
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    
+    const dateEl = document.getElementById('current-date');
+    const timeEl = document.getElementById('current-time');
+    
+    if(dateEl) dateEl.innerText = dateStr;
+    if(timeEl) timeEl.innerText = timeStr;
+
+    // Charts
+    document.addEventListener("DOMContentLoaded", function() {
+        // Donut Chart
+        const ctxDonutEl = document.getElementById('donutChart');
+        if (ctxDonutEl) {
+            const ctxDonut = ctxDonutEl.getContext('2d');
+            new Chart(ctxDonut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pending', 'Approved', 'Rejected'],
+                    datasets: [{
+                        data: [3, 7, 2],
+                        backgroundColor: ['#f59e0b', '#10b981', '#ef4444'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    }
+                },
+                plugins: [{
+                    id: 'textCenter',
+                    beforeDraw: function(chart) {
+                        var width = chart.width, height = chart.height, ctx = chart.ctx;
+                        ctx.restore();
+                        var fontSize = (height / 80).toFixed(2);
+                        ctx.font = "bold " + fontSize + "em Inter";
+                        ctx.textBaseline = "middle";
+                        ctx.fillStyle = "#0f172a";
+                        var text = "12",
+                            textX = Math.round((width - ctx.measureText(text).width) / 2),
+                            textY = height / 2 - 5;
+                        ctx.fillText(text, textX, textY);
+                        
+                        ctx.font = "normal " + (fontSize*0.4) + "em Inter";
+                        ctx.fillStyle = "#64748b";
+                        var text2 = "Total",
+                            text2X = Math.round((width - ctx.measureText(text2).width) / 2),
+                            text2Y = height / 2 + 12;
+                        ctx.fillText(text2, text2X, text2Y);
+                        ctx.save();
+                    }
+                }]
+            });
+        }
+
+        // Bar Chart
+        const ctxBarEl = document.getElementById('barChart');
+        if (ctxBarEl) {
+            const ctxBar = ctxBarEl.getContext('2d');
+            new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['Crop', 'Livestock', 'Equipment'],
+                    datasets: [{
+                        label: 'Schemes',
+                        data: [12, 10, 8],
+                        backgroundColor: ['#22c55e', '#3b82f6', '#a855f7'],
+                        borderRadius: 4,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 15,
+                            ticks: { stepSize: 5, color: '#94a3b8', font: { size: 10 } },
+                            grid: { color: '#f1f5f9', drawBorder: false }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { color: '#475569', font: { size: 11, weight: '600' } }
+                        }
+                    },
+                    animation: {
+                        onComplete: function() {
+                            const chartInstance = this;
+                            const ctx = chartInstance.ctx;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillStyle = '#0f172a';
+                            ctx.font = 'bold 12px Inter';
+                            
+                            this.data.datasets.forEach(function (dataset, i) {
+                                const meta = chartInstance.getDatasetMeta(i);
+                                meta.data.forEach(function (bar, index) {
+                                    const data = dataset.data[index];
+                                    ctx.fillText(data, bar.x, bar.y - 5);
+                                });
+                            });
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

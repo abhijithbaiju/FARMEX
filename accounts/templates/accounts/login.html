@@ -1,0 +1,50 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Login - FARMEX{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card p-4">
+            <h3 class="text-center mb-4 fw-bold text-success"><i class="fas fa-sign-in-alt me-2"></i>Login</h3>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Username / Email</label>
+                    <input type="text" name="username" class="form-control" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Password</label>
+                    <div class="input-group">
+                        <input type="password" name="password" id="login-password" class="form-control" required>
+                        <button type="button" class="btn btn-outline-secondary" id="toggle-login-password"
+                            aria-label="Show password" aria-pressed="false">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-3 text-end">
+                    <a href="{% url 'password_reset' %}" class="small">Forgot password?</a>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Login</button>
+            </form>
+            <hr>
+            <div class="text-center small text-muted">
+                <a href="{% url 'farmer_register' %}">Register as Farmer</a> &bull;
+                <a href="{% url 'company_register' %}">Register as Company</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.getElementById('toggle-login-password').addEventListener('click', function () {
+        const passwordInput = document.getElementById('login-password');
+        const isVisible = passwordInput.type === 'text';
+
+        passwordInput.type = isVisible ? 'password' : 'text';
+        this.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+        this.setAttribute('aria-pressed', String(!isVisible));
+        this.querySelector('i').className = isVisible ? 'fas fa-eye' : 'fas fa-eye-slash';
+    });
+</script>
+{% endblock %}

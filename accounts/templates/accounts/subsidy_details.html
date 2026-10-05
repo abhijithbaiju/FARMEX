@@ -1,0 +1,209 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block title %}{{ scheme.name }}{% endblock %}
+{% block extra_css %}
+<style>
+  .scheme-reviews-panel { margin-top: 20px; padding: 20px; background: #fff; border: 1px solid #e3eee6; border-radius: 12px; box-shadow: 0 4px 14px rgba(21, 58, 39, .045); }
+  .scheme-reviews-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
+  .scheme-reviews-title { display: flex; align-items: center; gap: 10px; color: #236b45; font-size: 1.1rem; font-weight: 750; margin: 0; }
+  .scheme-reviews-title i { font-size: 1.15rem; }
+  .scheme-reviews-total { color: #748178; font-size: .78rem; text-align: right; }
+  .scheme-reviews-score { display: flex; align-items: baseline; gap: 8px; margin-bottom: 14px; }
+  .scheme-reviews-score .star { color: #eba91e; font-size: 1.25rem; }
+  .scheme-reviews-score strong { color: #176b48; font-size: 1.3rem; font-weight: 800; }
+  .scheme-reviews-score span:last-child { color: #748178; font-size: .85rem; }
+  .scheme-reviews-carousel { position: relative; }
+  .scheme-review-viewport { overflow: hidden; border-radius: 9px; }
+  .scheme-review-track { display: flex; gap: 12px; align-items: stretch; transition: transform .35s ease; will-change: transform; }
+  .scheme-review-card { display: flex; flex: 0 0 calc((100% - 24px) / 3); flex-direction: column; gap: 9px; min-width: 0; min-height: 205px; padding: 16px; background: #fff; border: 1px solid #e4eee8; border-radius: 9px; box-shadow: 0 3px 10px rgba(21, 58, 39, .045); }
+  .scheme-review-stars { color: #eda91b; font-size: .94rem; white-space: nowrap; }
+  .scheme-review-comment { flex: 1; min-height: 72px; color: #52645a; font-size: .84rem; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-line; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
+  .scheme-review-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 8px; border-top: 1px solid #edf2ee; color: #748178; font-size: .7rem; }
+  .scheme-review-verified { color: #34744d; font-weight: 650; }
+  .scheme-reviews-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+  .scheme-review-arrow { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex: 0 0 36px; color: #236b45; background: #fff; border: 1px solid #d9e9dc; border-radius: 50%; cursor: pointer; transition: color .18s ease, background .18s ease, border-color .18s ease; }
+  .scheme-review-arrow:hover:not(:disabled) { color: #fff; background: #236b45; border-color: #236b45; }
+  .scheme-review-arrow:disabled { color: #aab7ad; cursor: not-allowed; }
+  .scheme-review-dots { display: flex; align-items: center; justify-content: center; gap: 7px; }
+  .scheme-review-dot { width: 8px; height: 8px; padding: 0; background: #cbd9ce; border: 0; border-radius: 50%; cursor: pointer; transition: width .2s ease, background .2s ease; }
+  .scheme-review-dot[aria-current="true"] { width: 20px; background: #34744d; border-radius: 99px; }
+  .scheme-review-empty { padding: 20px 14px; color: #718077; background: #f8fbf8; border: 1px dashed #d3e2d7; border-radius: 8px; font-size: .85rem; text-align: center; }
+  .scheme-reviews-shortcut { display: inline-flex; align-items: center; gap: 7px; margin: -8px 0 18px; padding: 7px 11px; color: #236b45; background: #f1f8f2; border: 1px solid #d9e9dc; border-radius: 7px; font-size: .82rem; font-weight: 700; text-decoration: none; }
+  .scheme-reviews-shortcut i { color: #bd8922; }
+  .scheme-reviews-shortcut:hover { color: #185637; background: #e9f4eb; }
+  @media (max-width: 800px) { .scheme-review-card { flex-basis: calc((100% - 12px) / 2); } }
+  @media (max-width: 560px) {
+    .scheme-reviews-panel { padding: 16px; }
+    .scheme-reviews-heading { align-items: flex-start; }
+    .scheme-review-card { flex-basis: 100%; min-height: 190px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .scheme-review-track, .scheme-review-arrow, .scheme-review-dot { transition: none; } }
+</style>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card border-0 shadow-sm overflow-hidden">
+      {% if scheme.scheme_image %}
+      <img src="{{ scheme.scheme_image.url }}" alt="{{ scheme.name }}" class="w-100" style="max-height:320px; object-fit:cover;">
+      {% endif %}
+      <div class="card-body p-4">
+        <p class="text-success text-uppercase small fw-bold mb-1">Subsidy Details</p>
+        <h2 class="fw-bold text-dark mb-1">{{ scheme.name }}</h2>
+        <p class="text-muted mb-4">Offered by {{ scheme.company.company_name }}</p>
+
+        <h5 class="fw-bold">Product Description</h5>
+        <p class="text-muted mb-4">{{ scheme.description }}</p>
+
+        <a class="scheme-reviews-shortcut" href="#scheme-reviews-title" aria-label="Jump to farmer reviews for {{ scheme.name }}">
+          <i class="fa-solid fa-star" aria-hidden="true"></i>
+          <span>Farmer Reviews</span>
+          {% if feedback_count %}<span>({{ feedback_count }})</span>{% endif %}
+        </a>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-4"><div class="bg-light rounded p-3"><small class="text-muted d-block">Actual Price</small><strong>{% if scheme.actual_price %}₹{{ scheme.actual_price }}{% else %}Not specified{% endif %}</strong></div></div>
+          <div class="col-md-4"><div class="bg-success-subtle rounded p-3"><small class="text-success d-block">Subsidized Price</small><strong class="text-success">₹{{ scheme.subsidy_amount }}</strong></div></div>
+          <div class="col-md-4"><div class="bg-light rounded p-3"><small class="text-muted d-block">Last Date to Apply</small><strong>{% if scheme.application_deadline %}{{ scheme.application_deadline|date:"d M Y" }}{% else %}No deadline set{% endif %}</strong></div></div>
+        </div>
+
+        <h5 class="fw-bold">Category</h5>
+        <p class="mb-4">{% for category in scheme.eligible_categories.all %}<span class="badge bg-success-subtle text-success me-1">{{ category.name }}</span>{% empty %}General{% endfor %}</p>
+
+        <h5 class="fw-bold">Eligible Locations</h5>
+        {% if scheme.geographical_scope == 'all_states' %}
+        <p class="text-muted mb-4">All states are eligible.</p>
+        {% else %}
+        <ul class="text-muted mb-4">
+          {% for location in scheme_locations %}
+          <li>{% if location.district %}{{ location.district.name }}, {{ location.state.name }}{% else %}{{ location.state.name }}{% endif %}</li>
+          {% empty %}<li>No eligible states selected</li>{% endfor %}
+        </ul>
+        {% if has_state_level_locations and not has_district_locations %}
+        <p class="text-muted mb-4">All districts within the selected states are eligible.</p>
+        {% endif %}
+        {% endif %}
+
+        <h5 class="fw-bold">Eligibility Criteria</h5>
+        <ul class="text-muted mb-4">
+          {% if scheme.min_income or scheme.max_income %}<li>Income: ₹{{ scheme.min_income|default:'0' }} to ₹{{ scheme.max_income|default:'No maximum' }}</li>{% endif %}
+          {% if scheme.min_land_sqm or scheme.max_land_sqm %}<li>Land area: {{ scheme.min_land_sqm|default:'0' }} to {{ scheme.max_land_sqm|default:'No maximum' }} m²</li>{% endif %}
+          <li>Eligible farming category must match the scheme.</li>
+        </ul>
+
+        <h5 class="fw-bold">Required Documents</h5>
+        <ul class="text-muted mb-4"><li>Aadhaar Card</li><li>Income Certificate</li><li>Land Tax Document</li></ul>
+
+        <h5 class="fw-bold">Application Procedure</h5>
+        <p class="text-muted">Click Apply Now, complete the application form, upload the required documents, and submit for verification.</p>
+
+        <div class="d-flex gap-2 mt-4">
+          {% if already_applied %}
+          <span class="btn btn-secondary disabled">Already Applied</span>
+          {% elif application_closed %}
+          <span class="btn btn-secondary disabled">Applications Closed</span>
+          {% else %}
+          <a href="{% url 'apply_scheme' scheme.id %}" class="btn btn-success">Apply Now</a>
+          {% endif %}
+          <a href="{% url 'farmer_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+      </div>
+    </div>
+
+    <section class="scheme-reviews-panel" aria-labelledby="scheme-reviews-title">
+      <div class="scheme-reviews-heading">
+        <h2 class="scheme-reviews-title" id="scheme-reviews-title"><i class="fa-solid fa-user-group" aria-hidden="true"></i> Farmer Reviews</h2>
+        {% if feedback_count %}<span class="scheme-reviews-total">Based on {{ feedback_count }} applicant review{% if feedback_count != 1 %}s{% endif %}</span>{% endif %}
+      </div>
+
+      {% if feedback_count %}
+      <div class="scheme-reviews-score" aria-label="Average rating {{ feedback_average|floatformat:1 }} out of 5">
+        <span class="star" aria-hidden="true">★</span>
+        <strong>{{ feedback_average|floatformat:1 }}</strong>
+        <span>/ 5</span>
+      </div>
+      <div class="scheme-reviews-carousel" data-scheme-reviews-carousel>
+        <div class="scheme-review-viewport">
+          <div class="scheme-review-track" data-review-track>
+        {% for card in scheme_review_cards %}
+        <article class="scheme-review-card" data-review-card>
+          <div class="scheme-review-stars" aria-label="{{ card.feedback.rating }} out of 5 stars">{{ card.stars }}</div>
+          <div class="scheme-review-comment">“{{ card.feedback.comment }}”</div>
+          <div class="scheme-review-meta">
+            <span class="scheme-review-verified"><i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>Verified Farmer</span>
+            <time datetime="{{ card.feedback.created_at|date:'Y-m-d' }}">{{ card.feedback.created_at|date:"d M Y" }}</time>
+          </div>
+        </article>
+        {% endfor %}
+          </div>
+        </div>
+        <div class="scheme-reviews-controls">
+          <button class="scheme-review-arrow" type="button" data-review-previous aria-label="Previous reviews" title="Previous reviews"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
+          <div class="scheme-review-dots" data-review-dots aria-label="Review pages"></div>
+          <button class="scheme-review-arrow" type="button" data-review-next aria-label="Next reviews" title="Next reviews"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+        </div>
+      </div>
+      {% else %}
+      <div class="scheme-review-empty">No reviews yet. Applicant reviews for this scheme will appear here.</div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+  document.querySelectorAll('[data-scheme-reviews-carousel]').forEach((carousel) => {
+    const track = carousel.querySelector('[data-review-track]');
+    const cards = Array.from(carousel.querySelectorAll('[data-review-card]'));
+    const dotsContainer = carousel.querySelector('[data-review-dots]');
+    const previousButton = carousel.querySelector('[data-review-previous]');
+    const nextButton = carousel.querySelector('[data-review-next]');
+    let page = 0;
+    let cardsPerPage = 3;
+
+    function visibleCards() {
+      if (window.matchMedia('(max-width: 560px)').matches) return 1;
+      if (window.matchMedia('(max-width: 800px)').matches) return 2;
+      return 3;
+    }
+
+    function pageCount() {
+      return Math.max(1, Math.ceil(cards.length / cardsPerPage));
+    }
+
+    function render() {
+      cardsPerPage = visibleCards();
+      page = Math.min(page, pageCount() - 1);
+      const cardWidth = cards[0].getBoundingClientRect().width;
+      const gap = Number.parseFloat(window.getComputedStyle(track).gap) || 0;
+      track.style.transform = `translateX(-${page * (cardWidth + gap) * cardsPerPage}px)`;
+      dotsContainer.replaceChildren();
+      for (let dotPage = 0; dotPage < pageCount(); dotPage += 1) {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'scheme-review-dot';
+        dot.setAttribute('aria-label', `Show review page ${dotPage + 1}`);
+        dot.setAttribute('aria-current', String(dotPage === page));
+        dot.addEventListener('click', () => {
+          page = dotPage;
+          render();
+        });
+        dotsContainer.append(dot);
+      }
+      previousButton.disabled = page === 0;
+      nextButton.disabled = page >= pageCount() - 1;
+    }
+
+    previousButton.addEventListener('click', () => {
+      page = Math.max(0, page - 1);
+      render();
+    });
+    nextButton.addEventListener('click', () => {
+      page = Math.min(pageCount() - 1, page + 1);
+      render();
+    });
+    window.addEventListener('resize', render);
+    render();
+  });
+</script>
+{% endblock %}

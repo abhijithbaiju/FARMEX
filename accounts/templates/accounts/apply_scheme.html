@@ -1,0 +1,52 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Apply for {{ scheme.name }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card p-4">
+      <h3 class="fw-bold mb-1 text-success">Apply for Scheme</h3>
+      <h5 class="mb-1">{{ scheme.name }}</h5>
+      <p class="text-muted small mb-1">By {{ scheme.company.company_name }} | Subsidy: <strong>₹{{ scheme.subsidy_amount }}</strong></p>
+      <p class="mb-4">{{ scheme.description }}</p>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if scheme.custom_form_fields %}
+          {% for field_name, field_type in scheme.custom_form_fields.items %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">{{ field_name }}</label>
+            {% if field_type == 'file' %}
+            <input type="file" name="{{ field_name }}" class="form-control">
+            {% elif field_type == 'textarea' %}
+            <textarea name="{{ field_name }}" class="form-control" rows="3"></textarea>
+            {% else %}
+            <input type="{{ field_type|default:'text' }}" name="{{ field_name }}" class="form-control">
+            {% endif %}
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Purpose of Application</label>
+          <textarea name="purpose" class="form-control" rows="3" placeholder="Describe how you will use this subsidy..." required></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Aadhaar Card *</label>
+          <input type="file" name="aadhaar_card" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Income Certificate *</label>
+          <input type="file" name="income_certificate" class="form-control" accept=".pdf,.jpg,.png" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Land Tax Document *</label>
+          <input type="file" name="land_tax_document" class="form-control" accept=".pdf,.jpg,.png" required>
+        </div>
+        {% endif %}
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-primary flex-grow-1 py-2 fw-bold">Submit Application</button>
+          <a href="{% url 'farmer_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'accounts/base.html' %}
+{% block title %}{{ scheme.name }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card p-4">
+      <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+          <h3 class="fw-bold text-success mb-1">{{ scheme.name }}</h3>
+          <p class="text-muted mb-0">Published {{ scheme.created_at|date:"d M Y" }}</p>
+        </div>
+        <span class="badge {% if scheme.is_active %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %} px-3 py-2">
+          {% if scheme.is_active %}Active{% else %}Inactive{% endif %}
+        </span>
+      </div>
+
+      <p class="mb-4">{{ scheme.description }}</p>
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-4"><strong>Subsidy Amount</strong><br>₹{{ scheme.subsidy_amount }}</div>
+        <div class="col-md-4"><strong>Applications</strong><br>{{ scheme.applications.count }}</div>
+        <div class="col-md-4"><strong>Land Criteria</strong><br>{{ scheme.min_land_sqm|default:"No minimum" }} to {{ scheme.max_land_sqm|default:"No maximum" }} m²</div>
+      </div>
+
+      <h5 class="fw-bold text-success">Geographical Eligibility</h5>
+      {% if scheme.locations.all %}
+      <div class="mb-4">
+        {% for location in scheme.locations.all %}
+        <span class="badge bg-success-subtle text-success me-2 mb-2">{{ location.state.name }}</span>
+        {% endfor %}
+      </div>
+      <p class="text-muted mb-4">All districts within the selected states are eligible.</p>
+      {% else %}
+      <p class="text-muted mb-4">No eligible states selected.</p>
+      {% endif %}
+
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'edit_scheme' scheme.id %}" class="btn btn-primary">Edit Details</a>
+        <a href="{% url 'view_applications_scheme' scheme.id %}" class="btn btn-outline-success">View Applications</a>
+        <form method="post" action="{% url 'delete_scheme' scheme.id %}" onsubmit="return confirm('Delete this scheme and its applications? This cannot be undone.');">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-danger">Delete Scheme</button>
+        </form>
+        <a href="{% url 'company_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

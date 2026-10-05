@@ -1,0 +1,172 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Farmer Registration{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card p-4">
+      <h3 class="text-center mb-4 fw-bold text-success"><i class="fas fa-user-plus me-2"></i>Farmer Registration</h3>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Full Name *</label>
+            <input type="text" name="full_name" class="form-control" maxlength="100" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Phone Number (10 digits) *</label>
+            <input type="tel" name="phone" class="form-control" inputmode="numeric" pattern="[0-9]{10}" minlength="10" maxlength="10" autocomplete="tel" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Email *</label>
+            <input type="email" name="email" class="form-control" maxlength="150" autocomplete="email" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Aadhaar Number (12 digits) *</label>
+            <input type="text" name="aadhaar" class="form-control" inputmode="numeric" pattern="[0-9]{12}" minlength="12" maxlength="12" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Password *</label>
+            <div class="input-group">
+              <input type="password" name="password" class="form-control password-input" required>
+              <button type="button" class="btn btn-outline-secondary password-toggle" aria-label="Show password" title="Show password">
+                <i class="fas fa-eye" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Confirm Password *</label>
+            <div class="input-group">
+              <input type="password" name="confirm_password" class="form-control password-input" required>
+              <button type="button" class="btn btn-outline-secondary password-toggle" aria-label="Show confirm password" title="Show confirm password">
+                <i class="fas fa-eye" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold" for="country">Country *</label>
+            <select name="country" id="country" class="form-select" required>
+              <option value="">Select country</option>
+              <option value="India" selected>India</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold" for="state">State *</label>
+            <select name="state" id="state" class="form-select" required>
+              <option value="">Select state</option>
+              {% for state_option in states %}
+              <option value="{{ state_option.id }}" {% if selected_state == state_option.id|stringformat:'s' %}selected{% endif %}>{{ state_option.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold" for="district">District *</label>
+            <select name="district" id="district" class="form-select" required>
+              <option value="">Select district</option>
+              {% for state_option in states %}
+                {% for district_option in state_option.districts.all %}
+                <option value="{{ district_option.id }}" data-state-id="{{ state_option.id }}" {% if selected_district == district_option.id|stringformat:'s' %}selected{% endif %}>{{ district_option.name }}</option>
+                {% endfor %}
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-8">
+            <label class="form-label fw-semibold" for="house_address">House Name / House No. *</label>
+            <input type="text" name="house_address" id="house_address" class="form-control" maxlength="200" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold" for="pincode">Pincode *</label>
+            <input type="text" name="pincode" id="pincode" class="form-control" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Annual Income (₹) *</label>
+            <input type="number" name="income" class="form-control" min="0" step="0.01" required>
+          </div>
+          <div class="col-12">
+            <div class="row g-3">
+              <div class="col-md-5">
+                <label class="form-label fw-semibold" for="land_area_value">Land Area Value *</label>
+                <input type="number" name="land_area_value" id="land_area_value" class="form-control" min="0.0001" max="100000000" step="0.0001" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold" for="land_area_unit">Land Area Unit *</label>
+                <select name="land_area_unit" id="land_area_unit" class="form-select" required>
+                  <option value="">Select unit</option>
+                  <option value="sqm">Square Metre (m²)</option>
+                  <option value="are">Are</option>
+                  <option value="hectare">Hectare</option>
+                  <option value="acre">Acre</option>
+                  <option value="cent">Cent</option>
+                 
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">Equivalent Area</label>
+                <output id="standardized-area" class="form-control bg-light" aria-live="polite">-</output>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">Farming Categories *</label>
+            <div class="row">
+              {% for cat in categories %}
+              <div class="col-md-4">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="categories" value="{{ cat.name }}" id="cat_{{ forloop.counter }}" {% if cat.name in selected_categories %}checked{% endif %}>
+                  <label class="form-check-label" for="cat_{{ forloop.counter }}">{{ cat.name }}</label>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            <small class="text-muted">Select all that apply. Categories determine which schemes you're eligible for.</small>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 mt-4 py-2 fw-bold">Register</button>
+      </form>
+      <div class="text-center mt-3 small"><a href="{% url 'login' %}">Already have an account? Login</a></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+{{ location_data|json_script:"location-data" }}
+<script>
+  const conversionFactors = {sqm: 1, are: 100, hectare: 10000, acre: 4046.8564224, cent: 40.468564224, gunta: 101.17141056};
+  const valueInput = document.getElementById('land_area_value');
+  const unitInput = document.getElementById('land_area_unit');
+  const standardizedOutput = document.getElementById('standardized-area');
+  function updateLandArea() {
+    const value = Number(valueInput.value);
+    const factor = conversionFactors[unitInput.value];
+    standardizedOutput.textContent = value > 0 && factor ? `${(value * factor).toLocaleString('en-IN', {maximumFractionDigits: 2})} m²` : '-';
+  }
+  [valueInput, unitInput].forEach((input) => input.addEventListener('input', updateLandArea));
+
+  const stateInput = document.getElementById('state');
+  const districtInput = document.getElementById('district');
+  const selectedDistrict = districtInput.value;
+  function updateDistricts() {
+    const stateId = stateInput.value;
+    Array.from(districtInput.options).forEach((option) => {
+      if (!option.value) return;
+      option.hidden = Boolean(stateId && option.dataset.stateId !== stateId);
+    });
+    if (districtInput.selectedOptions[0] && districtInput.selectedOptions[0].hidden) {
+      districtInput.value = '';
+    }
+  }
+  stateInput.addEventListener('change', updateDistricts);
+  updateDistricts();
+
+  document.querySelectorAll('.password-toggle').forEach((toggle) => {
+    toggle.addEventListener('click', function() {
+      const passwordInput = this.parentElement.querySelector('.password-input');
+      const isHidden = passwordInput.type === 'password';
+      passwordInput.type = isHidden ? 'text' : 'password';
+      this.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+      this.setAttribute('title', isHidden ? 'Hide password' : 'Show password');
+      this.querySelector('i').className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 130" fill="none">
+  <!-- Foliage / Wheat on left -->
+  <path d="M22 88 C20 70, 32 50, 42 38 C40 48, 42 62, 38 78" stroke="#478062" stroke-width="2" stroke-linecap="round"/>
+  <path d="M42 38 C32 30, 24 35, 18 42 C26 44, 34 44, 42 38 Z" fill="none" stroke="#478062" stroke-width="1.8"/>
+  <path d="M38 52 C26 48, 18 55, 14 62 C22 62, 30 60, 38 52 Z" fill="none" stroke="#478062" stroke-width="1.8"/>
+  <path d="M36 68 C24 66, 16 74, 12 82 C20 80, 28 77, 36 68 Z" fill="none" stroke="#478062" stroke-width="1.8"/>
+  <path d="M42 42 C48 32, 58 35, 64 42 C56 44, 48 44, 42 42 Z" fill="none" stroke="#478062" stroke-width="1.8"/>
+  <path d="M38 56 C46 50, 54 54, 60 62 C52 62, 45 61, 38 56 Z" fill="none" stroke="#478062" stroke-width="1.8"/>
+
+  <!-- Tractor in background/middle -->
+  <!-- Cab -->
+  <path d="M72 74 L72 64 C72 60, 75 56, 80 56 L88 56 L94 65 L94 74 Z" stroke="#478062" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Hood/Engine -->
+  <path d="M94 66 L106 66 L108 74 L94 74 Z" stroke="#478062" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Exhaust -->
+  <path d="M102 66 L102 56 L104 56" stroke="#478062" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- Steering wheel inside cab -->
+  <path d="M86 64 L82 68" stroke="#478062" stroke-width="1.8"/>
+  <!-- Big Rear Wheel -->
+  <circle cx="76" cy="76" r="14" stroke="#478062" stroke-width="2"/>
+  <circle cx="76" cy="76" r="6" stroke="#478062" stroke-width="1.5"/>
+  <!-- Front Wheel -->
+  <circle cx="104" cy="80" r="9" stroke="#478062" stroke-width="2"/>
+  <circle cx="104" cy="80" r="4" stroke="#478062" stroke-width="1.5"/>
+
+  <!-- Rolling field contour lines -->
+  <path d="M0 98 C40 85, 90 92, 140 102 C180 110, 210 106, 240 98" stroke="#478062" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M0 110 C50 96, 110 105, 170 116 C200 120, 225 116, 240 110" stroke="#3d7054" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M0 122 C60 112, 130 118, 190 128 C215 130, 230 126, 240 122" stroke="#36634a" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,1422 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+
+{% block title %}Company Dashboard — FARMEX{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --sidebar-bg: #0d3d29;
+    --sidebar-hover: #134e35;
+    --sidebar-active: #1e7a48;
+    --sidebar-text: #b6d7c7;
+    --sidebar-text-active: #ffffff;
+    --primary-green: #15803d;
+    --primary-dark-green: #0f5b35;
+    --bg-canvas: #f8fafc;
+  }
+
+  body {
+    background-color: var(--bg-canvas) !important;
+    color: #1e293b;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+
+  .company-dashboard-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* Top Navigation Header */
+  .company-header {
+    height: 74px;
+    background: #ffffff;
+    border-bottom: 1px solid #eef2f6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px 0 28px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .header-left-cluster {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+  }
+
+  .brand-logo-icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .brand-logo-icon svg {
+    width: 42px;
+    height: 42px;
+  }
+
+  .brand-text-block {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .brand-title {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #0f5132;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .brand-subtitle {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+
+  .header-menu-toggle {
+    color: #475569;
+    font-size: 1.25rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+  }
+
+  .header-menu-toggle:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .bell-btn {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1e293b;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .bell-btn:hover {
+    background: #f1f5f9;
+    color: var(--primary-green);
+  }
+
+  .bell-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ffffff;
+  }
+
+  .company-profile-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 14px 6px 6px;
+    border-radius: 999px;
+    background: #ffffff;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s;
+  }
+
+  .company-profile-badge:hover {
+    background: #f8fafc;
+  }
+
+  .company-avatar-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d3d29 0%, #164e31 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    box-shadow: 0 2px 8px rgba(13, 61, 41, 0.25);
+  }
+
+  .company-info-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+
+  .company-name-label {
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .company-role-label {
+    font-size: 0.74rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .header-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #0f766e;
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid #99d5d3;
+    background: #f0fdfa;
+    transition: all 0.2s ease;
+  }
+
+  .header-logout-btn:hover {
+    background: #ccfbf1;
+    border-color: #0f766e;
+    color: #115e59;
+  }
+
+  /* Body Layout */
+  .company-body-layout {
+    display: flex;
+    flex: 1;
+    min-height: calc(100vh - 74px);
+  }
+
+  /* Sidebar */
+  .company-sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px 16px 20px 16px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .sidebar-nav-item {
+    margin: 0;
+  }
+
+  .sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 11px 16px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 500;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+  }
+
+  .sidebar-nav-link i {
+    font-size: 1.05rem;
+    width: 22px;
+    text-align: center;
+  }
+
+  .sidebar-nav-link:hover {
+    color: #ffffff;
+    background: var(--sidebar-hover);
+  }
+
+  .sidebar-nav-link.active {
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-active);
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+
+  .sidebar-pill-count {
+    margin-left: auto;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
+
+  /* Sidebar Watermark */
+  .sidebar-footer-watermark {
+    padding-top: 16px;
+    text-align: center;
+  }
+
+  .watermark-img-box {
+    width: 100%;
+    margin-bottom: 10px;
+    opacity: 0.75;
+  }
+
+  .watermark-img-box svg, .watermark-img-box img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .sidebar-tagline {
+    color: #8cbfa2;
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  /* Main Canvas */
+  .company-main-canvas {
+    flex: 1;
+    padding: 32px 40px 50px 40px;
+    overflow-y: auto;
+    background: #f8fafc;
+  }
+
+  /* Hero Welcome Banner */
+  .hero-welcome-banner {
+    background: linear-gradient(135deg, #eaf8ee 0%, #f6fbf8 50%, #ffffff 100%);
+    border: 1px solid #d4eedb;
+    border-radius: 18px;
+    padding: 26px 32px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    box-shadow: 0 4px 20px rgba(21, 128, 61, 0.04);
+  }
+
+  .hero-text-side {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 2;
+    max-width: 60%;
+  }
+
+  .hero-leaf-badge {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    flex-shrink: 0;
+    box-shadow: 0 8px 16px rgba(21, 128, 61, 0.2);
+  }
+
+  .hero-greeting-title {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    margin: 0 0 6px 0;
+  }
+
+  .hero-greeting-sub {
+    font-size: 0.94rem;
+    color: #475569;
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  .hero-bg-scenery {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 46%;
+    overflow: hidden;
+    border-top-right-radius: 18px;
+    border-bottom-right-radius: 18px;
+    mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.8) 40%, black 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.8) 40%, black 100%);
+    pointer-events: none;
+  }
+
+  .hero-scenery-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* 4 Metric Stat Cards */
+  .metric-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+    margin-bottom: 38px;
+  }
+
+  .company-rating-summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    margin: -18px 0 30px;
+    background: #ffffff;
+    border: 1px solid #dce9e1;
+    border-radius: 10px;
+    color: #244a34;
+    text-decoration: none;
+    box-shadow: 0 3px 12px rgba(21, 58, 39, .035);
+    transition: border-color .18s ease, box-shadow .18s ease;
+  }
+  .company-rating-summary:hover { color: #244a34; border-color: #a8cbb2; box-shadow: 0 6px 16px rgba(21, 58, 39, .07); }
+  .company-rating-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; color: #a97917; background: #fff7e4; border-radius: 9px; }
+  .company-rating-copy { display: grid; gap: 1px; }
+  .company-rating-label { color: #69796f; font-size: .75rem; font-weight: 650; }
+  .company-rating-copy strong { color: #236b45; font-size: 1.03rem; line-height: 1.25; }
+  .company-rating-copy small { color: #7b8980; font-size: .72rem; }
+  .company-rating-action { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; color: #236b45; font-size: .8rem; font-weight: 700; }
+
+  .stat-metric-card {
+    border-radius: 16px;
+    padding: 22px 24px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-decoration: none;
+    border: 1px solid transparent;
+    background: #ffffff;
+  }
+
+  .stat-metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  /* Card 1: Total Schemes (Mint) */
+  .stat-card-mint {
+    background: #eefaf2;
+    border-color: #d1fae5;
+  }
+  .stat-card-mint .stat-icon-badge {
+    background: #22c55e;
+    color: #ffffff;
+  }
+  .stat-card-mint .stat-action-link {
+    color: #16a34a;
+  }
+
+  /* Card 2: Pending Applications (Sky) */
+  .stat-card-sky {
+    background: #eff6ff;
+    border-color: #dbeafe;
+  }
+  .stat-card-sky .stat-icon-badge {
+    background: #3b82f6;
+    color: #ffffff;
+  }
+  .stat-card-sky .stat-action-link {
+    color: #2563eb;
+  }
+
+  /* Card 3: Approved Applications (Warm Amber) */
+  .stat-card-amber {
+    background: #fffbeb;
+    border-color: #fef3c7;
+  }
+  .stat-card-amber .stat-icon-badge {
+    background: #f59e0b;
+    color: #ffffff;
+  }
+  .stat-card-amber .stat-action-link {
+    color: #d97706;
+  }
+
+  /* Card 4: Rejected Applications (Soft Red) */
+  .stat-card-red {
+    background: #fef2f2;
+    border-color: #fee2e2;
+  }
+  .stat-card-red .stat-icon-badge {
+    background: #ef4444;
+    color: #ffffff;
+  }
+  .stat-card-red .stat-action-link {
+    color: #dc2626;
+  }
+
+  .stat-icon-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    margin-bottom: 14px;
+  }
+
+  .stat-metric-title {
+    font-size: 0.94rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 8px;
+  }
+
+  .stat-metric-number {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1;
+    margin-bottom: 18px;
+  }
+
+  .stat-action-link {
+    font-size: 0.88rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: auto;
+    transition: gap 0.2s ease;
+  }
+
+  .stat-metric-card:hover .stat-action-link {
+    gap: 9px;
+  }
+
+  /* My Subsidy Schemes Section */
+  .section-schemes-wrapper {
+    margin-bottom: 38px;
+  }
+
+  .section-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  .section-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #eaf8ee;
+    color: var(--primary-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+  }
+
+  .section-main-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .section-view-all-link {
+    color: var(--primary-green);
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: gap 0.2s ease;
+  }
+
+  .section-view-all-link:hover {
+    color: var(--primary-dark-green);
+    gap: 9px;
+  }
+
+  /* Schemes Table Card */
+  .schemes-table-card {
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.02);
+  }
+
+  .schemes-table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .schemes-table thead th {
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eef2f6;
+    border-top: none;
+  }
+
+  .schemes-table tbody tr {
+    transition: background-color 0.2s ease;
+  }
+
+  .schemes-table tbody tr:hover {
+    background-color: #fafdfb;
+  }
+
+  .schemes-table tbody td {
+    padding: 18px 20px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .schemes-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .scheme-row-details {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 320px;
+  }
+
+  .scheme-row-thumb {
+    width: 68px;
+    height: 56px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #f1f5f9;
+  }
+
+  .scheme-row-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .scheme-row-meta {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .scheme-row-title {
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 3px 0;
+  }
+
+  .scheme-row-desc {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  .badge-category-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .badge-crop {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  .badge-livestock {
+    background: #e0f2fe;
+    color: #0284c7;
+  }
+
+  .badge-equipment {
+    background: #f3e8ff;
+    color: #7e22ce;
+  }
+
+  .price-actual-val {
+    font-size: 0.88rem;
+    color: #64748b;
+    text-decoration: line-through;
+    margin-bottom: 2px;
+  }
+
+  .price-subsidy-val {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--primary-green);
+  }
+
+  .badge-status-active {
+    background: #dcfce7;
+    color: #15803d;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .btn-view-applications {
+    background: var(--primary-dark-green);
+    color: #ffffff;
+    font-size: 0.86rem;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s ease;
+    border: none;
+  }
+
+  .btn-view-applications:hover {
+    background: #0a4628;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(15, 91, 53, 0.2);
+  }
+
+  .kebab-action-btn {
+    color: #94a3b8;
+    background: transparent;
+    border: none;
+    font-size: 1.15rem;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+
+  .kebab-action-btn:hover {
+    color: #0f172a;
+    background: #f1f5f9;
+  }
+
+  /* Bottom Dual Cards Row */
+  .bottom-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 24px;
+  }
+
+  .promo-mission-card {
+    background: linear-gradient(135deg, #eefaf2 0%, #f6fcf8 100%);
+    border: 1px solid #d4eedb;
+    border-radius: 18px;
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .promo-leaf-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #15803d;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  .promo-text {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: #166534;
+    line-height: 1.45;
+    margin: 0;
+    z-index: 2;
+  }
+
+  .promo-bg-watermark {
+    position: absolute;
+    right: 12px;
+    bottom: -10px;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .quick-actions-card {
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 18px;
+    padding: 22px 26px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.02);
+  }
+
+  .quick-actions-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .quick-buttons-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .quick-action-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: transform 0.2s ease;
+  }
+
+  .quick-action-item:hover {
+    transform: translateY(-2px);
+  }
+
+  .quick-icon-bubble {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  .bubble-green {
+    background: #22c55e;
+  }
+
+  .bubble-blue {
+    background: #3b82f6;
+  }
+
+  .bubble-purple {
+    background: #9333ea;
+  }
+
+  .bubble-teal {
+    background: #0d9488;
+  }
+
+  .quick-action-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #334155;
+    line-height: 1.25;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 1100px) {
+    .metric-cards-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .bottom-cards-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .company-body-layout {
+      flex-direction: column;
+    }
+    .company-sidebar {
+      width: 100%;
+      min-height: auto;
+    }
+    .sidebar-footer-watermark {
+      display: none;
+    }
+    .company-main-canvas {
+      padding: 20px 16px;
+    }
+    .hero-text-side {
+      max-width: 100%;
+    }
+    .hero-bg-scenery {
+      display: none;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .metric-cards-grid {
+      grid-template-columns: 1fr;
+    }
+    .company-rating-summary { margin-top: -18px; padding: 12px; }
+    .company-rating-action { font-size: .72rem; }
+    .quick-buttons-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="company-dashboard-wrapper">
+  <!-- Top Navigation Header -->
+  <header class="company-header">
+    <div class="header-left-cluster">
+      <a href="{% url 'home' %}" class="header-brand">
+        <div class="brand-logo-icon">
+          <!-- Exact leaf brandmark -->
+          <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="22" cy="22" r="21" stroke="#16a34a" stroke-width="2.2" fill="#f0fdf4"/>
+            <path d="M14 27C14 20.3726 19.3726 15 26 15C27.6569 15 29 16.3431 29 18C29 24.6274 23.6274 30 17 30C15.3431 30 14 28.6569 14 27Z" fill="#15803d"/>
+            <path d="M19 28C22.5 24 25.5 19 28 16" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M21 21C20.5 18.5 22 17 24 16.5" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="brand-text-block">
+          <span class="brand-title">FARMEX</span>
+          <span class="brand-subtitle">Subsidy Integrity Platform</span>
+        </div>
+      </a>
+      <button class="header-menu-toggle d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarCollapse">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+
+    <div class="header-actions">
+      <!-- Notification Bell -->
+      <a href="{% url 'notifications' %}" class="bell-btn" title="View Notifications">
+        <i class="fa-solid fa-bell"></i>
+        <span class="bell-badge">{{ unread_notification_count }}</span>
+      </a>
+
+      <!-- Company Profile -->
+      <div class="company-profile-badge">
+        <div class="company-avatar-circle">
+          <i class="fa-solid fa-building"></i>
+        </div>
+        <div class="company-info-text">
+          <span class="company-name-label">{{ company.company_name }}</span>
+          <span class="company-role-label">Company</span>
+        </div>
+      </div>
+
+      <!-- Direct Logout Link -->
+      <a href="{% url 'logout' %}" class="header-logout-btn">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Flash Messages -->
+  {% if messages %}
+  <div class="px-4 pt-3">
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show rounded-4 border-0 shadow-sm" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Main Body Layout -->
+  <div class="company-body-layout">
+    <!-- Dark Forest Green Sidebar -->
+    <aside class="company-sidebar" id="sidebarCollapse">
+      <ul class="sidebar-nav-list">
+        <li class="sidebar-nav-item">
+          <a href="{% url 'company_dashboard' %}" class="sidebar-nav-link active">
+            <i class="fa-solid fa-house"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="sidebar-nav-item">
+          <a href="{% url 'create_scheme' %}" class="sidebar-nav-link">
+            <i class="fa-regular fa-file-lines"></i>
+            <span>Create Subsidy Scheme</span>
+          </a>
+        </li>
+        <li class="sidebar-nav-item">
+          <a href="#schemes-section" class="sidebar-nav-link" onclick="scrollToSection('schemes-section')">
+            <i class="fa-solid fa-list-check"></i>
+            <span>My Schemes</span>
+          </a>
+        </li>
+        <li class="sidebar-nav-item">
+          <a href="{% url 'view_applications' %}" class="sidebar-nav-link">
+            <i class="fa-regular fa-comment-dots"></i>
+            <span>Applications</span>
+          </a>
+        </li>
+        <li class="sidebar-nav-item">
+          <a href="{% url 'company_farmer_reviews' %}" class="sidebar-nav-link">
+            <i class="fa-solid fa-star"></i>
+            <span>Farmer Reviews</span>
+          </a>
+        </li>
+        <li class="sidebar-nav-item">
+          <a href="#companyProfileModal" class="sidebar-nav-link" data-bs-toggle="modal" data-bs-target="#companyProfileModal">
+            <i class="fa-regular fa-user"></i>
+            <span>Profile</span>
+          </a>
+        </li>
+        <li class="sidebar-nav-item">
+          <a href="{% url 'notifications' %}" class="sidebar-nav-link">
+            <i class="fa-regular fa-bell"></i>
+            <span>Notifications</span>
+            {% if unread_notification_count > 0 %}
+            <span class="sidebar-pill-count">{{ unread_notification_count }}</span>
+            {% endif %}
+          </a>
+        </li>
+        <li class="sidebar-nav-item">
+          <a href="{% url 'password_change' %}" class="sidebar-nav-link">
+            <i class="fa-solid fa-key"></i>
+            <span>Change Password</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Bottom Sidebar Watermark Illustration -->
+      <div class="sidebar-footer-watermark">
+        <div class="watermark-img-box">
+          <img src="{% static 'images/sidebar_watermark.svg' %}" alt="Subsidy watermark illustration">
+        </div>
+        <p class="sidebar-tagline">Supporting Farmers<br>for a Sustainable Future</p>
+      </div>
+    </aside>
+
+    <!-- Main Content Canvas -->
+    <main class="company-main-canvas">
+      {% if pending %}
+      <!-- Pending Approval State -->
+      <div class="alert alert-warning border-0 rounded-4 p-4 shadow-sm text-center my-4">
+        <div class="fs-1 mb-2">⏳</div>
+        <h3 class="fw-bold text-dark mb-2">Account Pending Admin Approval</h3>
+        <p class="text-secondary mb-3">
+          Your company <strong>{{ company.company_name }}</strong> registration is currently being verified.
+          You will be notified once the administration approves your credentials.
+        </p>
+        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">GST: {{ company.gst_number }}</span>
+      </div>
+      {% else %}
+
+      <!-- Hero Welcome Banner -->
+      <div class="hero-welcome-banner">
+        <div class="hero-text-side">
+          <div class="hero-leaf-badge">
+            <i class="fa-solid fa-seedling"></i>
+          </div>
+          <div>
+            <h1 class="hero-greeting-title">Welcome, {{ company.company_name }}.</h1>
+            <p class="hero-greeting-sub">Provide quality products at reduced prices and support the farming community.</p>
+          </div>
+        </div>
+
+        <div class="hero-bg-scenery">
+          <img src="{% static 'images/farm_sunrise_banner.jpg' %}" alt="Agricultural Field Sunrise" class="hero-scenery-img">
+        </div>
+      </div>
+
+      <!-- 4 Stat Metric Cards -->
+      <div class="metric-cards-grid">
+        <!-- Card 1: Total Schemes Created -->
+        <a href="#schemes-section" class="stat-metric-card stat-card-mint" onclick="scrollToSection('schemes-section')">
+          <div class="stat-icon-badge">
+            <i class="fa-solid fa-file-lines"></i>
+          </div>
+          <div class="stat-metric-title">Total Schemes Created</div>
+          <div class="stat-metric-number">{{ stats.total_schemes }}</div>
+          <div class="stat-action-link">View All Schemes &rarr;</div>
+        </a>
+
+        <!-- Card 2: Pending Applications -->
+        <a href="{% url 'view_applications' %}" class="stat-metric-card stat-card-sky">
+          <div class="stat-icon-badge">
+            <i class="fa-solid fa-file-invoice"></i>
+          </div>
+          <div class="stat-metric-title">Pending Applications</div>
+          <div class="stat-metric-number">{{ stats.pending_applications }}</div>
+          <div class="stat-action-link">View Applications &rarr;</div>
+        </a>
+
+        <!-- Card 3: Approved Applications -->
+        <a href="{% url 'view_applications' %}" class="stat-metric-card stat-card-amber">
+          <div class="stat-icon-badge">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <div class="stat-metric-title">Approved Applications</div>
+          <div class="stat-metric-number">{{ stats.approved_applications }}</div>
+          <div class="stat-action-link">View Details &rarr;</div>
+        </a>
+
+        <!-- Card 4: Rejected Applications -->
+        <a href="{% url 'view_applications' %}" class="stat-metric-card stat-card-red">
+          <div class="stat-icon-badge">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </div>
+          <div class="stat-metric-title">Rejected Applications</div>
+          <div class="stat-metric-number">{{ stats.rejected_applications }}</div>
+          <div class="stat-action-link">View Details &rarr;</div>
+        </a>
+      </div>
+
+      <a href="{% url 'company_farmer_reviews' %}" class="company-rating-summary" aria-label="View farmer reviews">
+        <span class="company-rating-icon"><i class="fa-solid fa-star" aria-hidden="true"></i></span>
+        <span class="company-rating-copy">
+          <span class="company-rating-label">Farmer Rating</span>
+          <strong>{% if stats.farmer_review_count %}{{ stats.farmer_rating|floatformat:1 }} / 5{% else %}No reviews yet{% endif %}</strong>
+          <small>{{ stats.farmer_review_count }} Review{% if stats.farmer_review_count != 1 %}s{% endif %}</small>
+        </span>
+        <span class="company-rating-action">View Farmer Reviews <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+      </a>
+
+      <!-- My Subsidy Schemes Section -->
+      <section id="schemes-section" class="section-schemes-wrapper">
+        <div class="section-header-row">
+          <div class="section-title-group">
+            <div class="section-title-icon">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <h2 class="section-main-title">My Subsidy Schemes</h2>
+          </div>
+          <a href="{% url 'create_scheme' %}" class="section-view-all-link">
+            <span>View All Schemes</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="schemes-table-card">
+          <div class="table-responsive">
+            <table class="schemes-table">
+              <thead>
+                <tr>
+                  <th>Scheme Details</th>
+                  <th>Category</th>
+                  <th>Actual Price</th>
+                  <th>Subsidy Price</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in enriched_schemes %}
+                <tr>
+                  <!-- Scheme Details with Thumbnail -->
+                  <td>
+                    <div class="scheme-row-details">
+                      <div class="scheme-row-thumb">
+                        {% if item.image|slice:":1" == "/" %}
+                        <img src="{{ item.image }}" alt="{{ item.name }}">
+                        {% else %}
+                        <img src="{% static item.image %}" alt="{{ item.name }}">
+                        {% endif %}
+                      </div>
+                      <div class="scheme-row-meta">
+                        <h4 class="scheme-row-title">{{ item.name }}</h4>
+                        <p class="scheme-row-desc">{{ item.description|truncatechars:75 }}</p>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Category Badge -->
+                  <td>
+                    <span class="badge-category-pill {{ item.category_class }}">{{ item.category }}</span>
+                  </td>
+
+                  <!-- Actual Price -->
+                  <td>
+                    <div class="price-actual-val">{{ item.actual_price }}</div>
+                  </td>
+
+                  <!-- Subsidy Price -->
+                  <td>
+                    <div class="price-subsidy-val">{{ item.subsidy_price }}</div>
+                  </td>
+
+                  <!-- Status -->
+                  <td>
+                    <span class="badge-status-active">
+                      <i class="fa-solid fa-circle me-1" style="font-size: 0.45rem;"></i> Active
+                    </span>
+                  </td>
+
+                  <!-- Actions -->
+                  <td class="text-end">
+                    <div class="d-inline-flex align-items-center gap-2">
+                      <a href="{% url 'view_applications_scheme' item.id %}" class="btn-view-applications">
+                        View Applications
+                      </a>
+                      <div class="dropdown d-inline-block">
+                        <button class="kebab-action-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                          <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 p-1">
+                          <li><a class="dropdown-item py-2 small" href="{% url 'scheme_details' item.id %}"><i class="fa-solid fa-eye me-2 text-success"></i>View Details</a></li>
+                          <li><a class="dropdown-item py-2 small" href="{% url 'edit_scheme' item.id %}"><i class="fa-solid fa-pen me-2 text-primary"></i>Edit Details</a></li>
+                          <li><a class="dropdown-item py-2 small" href="{% url 'view_applications_scheme' item.id %}"><i class="fa-solid fa-users me-2 text-primary"></i>View Applications ({{ item.applications_count }})</a></li>
+                          <li><a class="dropdown-item py-2 small" href="{% url 'create_scheme' %}"><i class="fa-solid fa-copy me-2 text-secondary"></i>Create Another</a></li>
+                          <li><hr class="dropdown-divider"></li>
+                          <li><form method="post" action="{% url 'delete_scheme' item.id %}" onsubmit="return confirm('Delete this scheme and its applications? This cannot be undone.');">{% csrf_token %}<button type="submit" class="dropdown-item py-2 small text-danger"><i class="fa-solid fa-trash me-2"></i>Delete Scheme</button></form></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="6" class="text-center py-5">
+                    <div class="py-3">
+                      <i class="fa-regular fa-folder-open text-muted fs-1 mb-3 d-block"></i>
+                      <h5 class="fw-bold text-dark mb-1">No Subsidy Schemes Created Yet</h5>
+                      <p class="text-muted small mb-3">Create your first subsidy scheme to begin receiving farmer applications.</p>
+                      <a href="{% url 'create_scheme' %}" class="btn btn-success rounded-pill px-4">
+                        <i class="fa-solid fa-plus me-1"></i> Create Scheme
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bottom Dual Cards Row -->
+      <div class="bottom-cards-grid">
+        <!-- Left Promotional / Mission Card -->
+        <div class="promo-mission-card">
+          <div class="promo-leaf-icon">
+            <i class="fa-solid fa-leaf"></i>
+          </div>
+          <p class="promo-text">
+            Your schemes help farmers grow<br>and build a stronger agricultural future.
+          </p>
+          <div class="promo-bg-watermark">
+            <svg width="120" height="90" viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M100 80 C85 60, 95 30, 115 15 C100 25, 80 50, 95 80 Z" fill="#34d399"/>
+              <path d="M90 80 C75 55, 65 35, 55 25 C65 40, 75 65, 85 80 Z" fill="#10b981"/>
+              <path d="M80 80 C60 65, 40 60, 30 55 C45 65, 65 75, 75 80 Z" fill="#059669"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Right Quick Actions Card -->
+        <div class="quick-actions-card">
+          <div class="quick-actions-title">
+            <i class="fa-solid fa-bolt text-success"></i>
+            <span>Quick Actions</span>
+          </div>
+
+          <div class="quick-buttons-row">
+            <!-- Action 1: Create Scheme -->
+            <a href="{% url 'create_scheme' %}" class="quick-action-item">
+              <div class="quick-icon-bubble bubble-green">
+                <i class="fa-solid fa-plus"></i>
+              </div>
+              <span class="quick-action-label">Create Scheme</span>
+            </a>
+
+            <!-- Action 2: View Applications -->
+            <a href="{% url 'view_applications' %}" class="quick-action-item">
+              <div class="quick-icon-bubble bubble-blue">
+                <i class="fa-solid fa-file-lines"></i>
+              </div>
+              <span class="quick-action-label">View Applications</span>
+            </a>
+
+            <!-- Action 3: Update Profile -->
+            <a href="#companyProfileModal" class="quick-action-item" data-bs-toggle="modal" data-bs-target="#companyProfileModal">
+              <div class="quick-icon-bubble bubble-purple">
+                <i class="fa-solid fa-user"></i>
+              </div>
+              <span class="quick-action-label">Update Profile</span>
+            </a>
+
+            <!-- Action 4: Help & Support -->
+            <a href="#helpSupportModal" class="quick-action-item" data-bs-toggle="modal" data-bs-target="#helpSupportModal">
+              <div class="quick-icon-bubble bubble-teal">
+                <i class="fa-solid fa-headset"></i>
+              </div>
+              <span class="quick-action-label">Help & Support</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {% endif %}
+    </main>
+  </div>
+</div>
+
+<!-- Company Profile Modal -->
+<div class="modal fade" id="companyProfileModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold text-success"><i class="fa-solid fa-building me-2"></i>Company Profile</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body py-3">
+        <div class="d-flex align-items-center gap-3 mb-3 p-3 bg-light rounded-4">
+          <div class="company-avatar-circle" style="width: 54px; height: 54px; font-size: 1.4rem;">
+            <i class="fa-solid fa-building"></i>
+          </div>
+          <div>
+            <h5 class="fw-bold mb-0">{{ company.company_name }}</h5>
+            <small class="text-muted">{{ company.user.email }}</small>
+          </div>
+        </div>
+        <ul class="list-group list-group-flush small">
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span class="text-muted">GST Number:</span>
+            <strong>{{ company.gst_number }}</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span class="text-muted">Approval Status:</span>
+            {% if company.is_approved %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill">Verified & Approved</span>
+            {% else %}
+            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-1 rounded-pill">Pending Verification</span>
+            {% endif %}
+          </li>
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span class="text-muted">Total Schemes Active:</span>
+            <strong>{{ stats.total_schemes }}</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span class="text-muted">Total Applications Processed:</span>
+            <strong>{{ stats.total_applications }}</strong>
+          </li>
+          {% if company.registration_document %}
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span class="text-muted">Registration Doc:</span>
+            <a href="{{ company.registration_document.url }}" target="_blank" class="text-success fw-bold text-decoration-none"><i class="fa-solid fa-file-pdf me-1"></i>View Document</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <a href="{% url 'edit_company_profile' %}" class="btn btn-success rounded-pill px-4">
+          <i class="fa-solid fa-user-pen me-1"></i>Edit Profile
+        </a>
+        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Help & Support Modal -->
+<div class="modal fade" id="helpSupportModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold text-success"><i class="fa-solid fa-headset me-2"></i>Help & Support</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body py-3">
+        <p class="text-muted small">Need assistance managing your subsidy schemes or reviewing farmer applications? Reach out to the FARMEX administrator team.</p>
+        <div class="p-3 bg-light rounded-4 mb-3">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <i class="fa-solid fa-envelope text-success"></i>
+            <span class="small">support@farmex.gov.in</span>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <i class="fa-solid fa-phone text-success"></i>
+            <span class="small">1800-FARMEX-HELP (Mon - Sat, 9am - 6pm)</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function scrollToSection(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+</script>
+{% endblock body %}

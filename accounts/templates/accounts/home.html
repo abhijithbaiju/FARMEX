@@ -1,0 +1,1409 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+
+{% block title %}FARMEX - Subsidy Integrity System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ==========================================================================
+       FARMEX Design Tokens (Extracted Precisely from Reference UI)
+       ========================================================================== */
+    :root {
+        --fx-forest-dark: #043828;
+        --fx-green-primary: #007a50;
+        --fx-green-deep: #005a3c;
+        --fx-green-hover: #004d32;
+        --fx-green-light: #e8f7f0;
+        --fx-teal-heading: #064e3b;
+        --fx-teal-body: #1d5244;
+        --fx-teal-muted: #2d7a66;
+        --fx-blue-badge: #006f9c;
+        --fx-border-subtle: #dcf2e8;
+        --fx-card-border: #bce3d4;
+        --fx-font-main: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #ffffff;
+        font-family: var(--fx-font-main);
+        color: var(--fx-teal-body);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+    }
+
+    /* ==========================================================================
+       1. Top Navigation Bar
+       ========================================================================== */
+    .farmex-header,
+    nav.farmex-header,
+    .navbar.farmex-header {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        border-bottom: 1px solid #e2f0e8;
+        position: sticky;
+        top: 0;
+        z-index: 1050;
+        box-shadow: 0 1px 10px rgba(0, 80, 50, 0.04);
+        padding: 0.65rem 0;
+    }
+
+    .brand-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+
+    .brand-icon-emblem {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 2px solid var(--fx-green-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--fx-green-primary);
+        font-size: 1.25rem;
+        box-shadow: 0 2px 8px rgba(0, 122, 80, 0.15);
+    }
+
+    .brand-name-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .brand-title-text {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--fx-teal-heading);
+        letter-spacing: -0.03em;
+        line-height: 1;
+    }
+
+    .brand-subtitle-text {
+        font-size: 0.66rem;
+        font-weight: 600;
+        color: var(--fx-teal-muted);
+        letter-spacing: 0.02em;
+        margin-top: 3px;
+    }
+
+    .header-nav-list {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .header-nav-item .nav-link-item {
+        color: #1a4f40;
+        font-size: 0.88rem;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 0.5rem 0;
+        position: relative;
+        transition: color 0.2s ease;
+    }
+
+    .header-nav-item .nav-link-item:hover {
+        color: var(--fx-green-primary);
+    }
+
+    .header-nav-item .nav-link-item.active {
+        color: var(--fx-teal-heading);
+        font-weight: 700;
+    }
+
+    /* Active Green Horizontal Bar Under "Home" */
+    .header-nav-item .nav-link-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 32px;
+        height: 3px;
+        background: var(--fx-green-primary);
+        border-radius: 2px;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    /* Login Outline Button */
+    .btn-login-outline {
+        border: 1.5px solid var(--fx-green-primary);
+        color: var(--fx-green-primary);
+        background: transparent;
+        border-radius: 8px;
+        font-size: 0.86rem;
+        font-weight: 700;
+        padding: 0.5rem 1.35rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-login-outline:hover {
+        background: rgba(0, 122, 80, 0.08);
+        color: var(--fx-green-hover);
+        border-color: var(--fx-green-hover);
+    }
+
+    /* Register Solid Button */
+    .btn-register-solid {
+        background: var(--fx-green-deep);
+        color: #ffffff;
+        border: 1.5px solid var(--fx-green-deep);
+        border-radius: 8px;
+        font-size: 0.86rem;
+        font-weight: 700;
+        padding: 0.5rem 1.35rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 10px rgba(0, 90, 60, 0.2);
+    }
+
+    .btn-register-solid:hover {
+        background: var(--fx-forest-dark);
+        color: #ffffff;
+        border-color: var(--fx-forest-dark);
+        transform: translateY(-1px);
+    }
+
+    /* ==========================================================================
+       2. Hero Section
+       ========================================================================== */
+    .hero-container {
+        position: relative;
+        background: url("{% static 'images/hero_farm_landscape.jpg' %}") center 42% / cover no-repeat;
+        min-height: 540px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 4.5rem 0;
+    }
+
+    /* Subtle atmospheric tint to make text pop while keeping scenery bright and clear */
+    .hero-atmosphere {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg,
+                rgba(255, 255, 255, 0.45) 0%,
+                rgba(255, 255, 255, 0.25) 45%,
+                rgba(255, 255, 255, 0.05) 75%,
+                rgba(255, 255, 255, 0) 100%);
+        pointer-events: none;
+    }
+
+    .hero-inner-row {
+        position: relative;
+        z-index: 2;
+        padding-bottom: 2.5rem;
+    }
+
+    .hero-main-title {
+        color: var(--fx-teal-heading);
+        font-size: clamp(2.3rem, 4.4vw, 3.25rem);
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -0.035em;
+        margin-bottom: 1.2rem;
+        text-shadow: 0 1px 3px rgba(255, 255, 255, 0.9);
+    }
+
+    .hero-main-subtitle {
+        color: #0a2e25;
+        font-size: 1.12rem;
+        line-height: 1.7;
+        max-width: 520px;
+        margin-bottom: 2rem;
+        font-weight: 600;
+        text-shadow:
+            0 0 14px rgba(255, 255, 255, 0.98),
+            0 1px 4px rgba(255, 255, 255, 0.95),
+            1px 1px 0 rgba(255, 255, 255, 0.9),
+            -1px -1px 0 rgba(255, 255, 255, 0.9);
+        letter-spacing: 0.01em;
+    }
+
+    .hero-btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.1rem;
+        align-items: center;
+    }
+
+    .btn-hero-green {
+        background: var(--fx-green-primary);
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.85rem 1.65rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        box-shadow: 0 4px 14px rgba(0, 122, 80, 0.3);
+        transition: all 0.25s ease;
+    }
+
+    .btn-hero-green:hover {
+        background: var(--fx-green-hover);
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0, 122, 80, 0.4);
+    }
+
+    .btn-hero-card {
+        background: #ffffff;
+        color: var(--fx-teal-heading);
+        border: 1.5px solid #a8dfcc;
+        border-radius: 8px;
+        padding: 0.85rem 1.65rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        box-shadow: 0 4px 14px rgba(0, 70, 50, 0.08);
+        transition: all 0.25s ease;
+    }
+
+    .btn-hero-card:hover {
+        background: #ffffff;
+        border-color: var(--fx-green-primary);
+        color: var(--fx-green-primary);
+        transform: translateY(-2px);
+    }
+
+    /* ==========================================================================
+       Connected Ecosystem Graphic (Matching the Screenshot Exactly)
+       ========================================================================== */
+    .ecosystem-stage {
+        position: relative;
+        width: 100%;
+        max-width: 440px;
+        height: 380px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ecosystem-svg-layer {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    /* Farmers Node (Top Left) */
+    .eco-node-farmers {
+        position: absolute;
+        top: 35px;
+        left: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: transform 0.3s ease;
+    }
+
+    .eco-node-farmers:hover,
+    .eco-node-companies:hover {
+        transform: scale(1.05);
+    }
+
+    /* Companies Node (Top Right) */
+    .eco-node-companies {
+        position: absolute;
+        top: 35px;
+        right: 25px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: transform 0.3s ease;
+    }
+
+    .eco-node-box {
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(8px);
+        border: 2px solid #bce6d7;
+        border-radius: 40px;
+        padding: 9px 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 8px 20px rgba(0, 80, 50, 0.12);
+        width: 96px;
+    }
+
+    .eco-node-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #e8f7f1;
+        border: 2px solid var(--fx-green-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--fx-green-primary);
+        font-size: 1.4rem;
+        margin-bottom: 5px;
+    }
+
+    .eco-node-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--fx-teal-heading);
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    /* Central FARMEX Hub Node */
+    .eco-node-hub {
+        position: absolute;
+        bottom: 25px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .eco-hub-pulse-ring {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0, 168, 107, 0.25) 0%, rgba(0, 168, 107, 0) 70%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulseRing 3.5s infinite ease-in-out;
+    }
+
+    @keyframes pulseRing {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 0.85;
+        }
+
+        50% {
+            transform: scale(1.08);
+            opacity: 1;
+        }
+    }
+
+    .eco-hub-circle {
+        width: 114px;
+        height: 114px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #06543b 0%, #033827 100%);
+        border: 3px solid #34d399;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 30px rgba(4, 56, 40, 0.38);
+        color: #ffffff;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .eco-hub-circle:hover {
+        transform: scale(1.04);
+    }
+
+    .eco-hub-leaf {
+        font-size: 1.85rem;
+        color: #ffffff;
+        margin-bottom: 2px;
+    }
+
+    .eco-hub-name {
+        font-size: 0.88rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        color: #ffffff;
+    }
+
+
+
+    /* ==========================================================================
+       3. Why Choose FARMEX? Section
+       ========================================================================== */
+    .why-section {
+        background: #ffffff;
+        padding: 45px 0 65px;
+        position: relative;
+        z-index: 4;
+    }
+
+    .section-title-wrap {
+        text-align: center;
+        margin-bottom: 2.8rem;
+    }
+
+    .section-main-heading {
+        color: var(--fx-teal-heading);
+        font-size: clamp(1.85rem, 3.2vw, 2.25rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-main-subheading {
+        color: var(--fx-teal-muted);
+        font-size: 1rem;
+        font-weight: 500;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .feature-item-card {
+        background: #f2faf6;
+        border: 1px solid #dcf2e8;
+        border-radius: 14px;
+        padding: 30px 18px 24px;
+        text-align: center;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 4px 14px rgba(6, 78, 59, 0.02);
+    }
+
+    .feature-item-card:hover {
+        transform: translateY(-6px);
+        background: #ffffff;
+        border-color: #a7dfcb;
+        box-shadow: 0 14px 30px rgba(6, 78, 59, 0.08);
+    }
+
+    .feature-icon-badge {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--fx-green-primary);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        margin-bottom: 1.2rem;
+        box-shadow: 0 4px 12px rgba(0, 122, 80, 0.22);
+    }
+
+    .feature-item-title {
+        color: var(--fx-teal-heading);
+        font-size: 1.08rem;
+        font-weight: 800;
+        margin-bottom: 0.6rem;
+        letter-spacing: -0.015em;
+    }
+
+    .feature-item-desc {
+        color: var(--fx-teal-body);
+        font-size: 0.86rem;
+        line-height: 1.5;
+        margin: 0;
+        font-weight: 500;
+    }
+
+    /* ==========================================================================
+       4. Choose Your Role Section
+       ========================================================================== */
+    .roles-section-wrapper {
+        position: relative;
+        background: linear-gradient(180deg, #ffffff 0%, #eff9f4 45%, #e1f5ec 100%);
+        padding: 35px 0 95px;
+        overflow: hidden;
+    }
+
+    /* Realistic Botanical Tea Foliage Sprigs along the margins */
+    .botanical-leaf-left {
+        position: absolute;
+        left: -10px;
+        top: 60px;
+        width: 150px;
+        pointer-events: none;
+        opacity: 0.88;
+        z-index: 1;
+    }
+
+    .botanical-leaf-right {
+        position: absolute;
+        right: -10px;
+        top: 80px;
+        width: 150px;
+        pointer-events: none;
+        opacity: 0.88;
+        z-index: 1;
+    }
+
+    .botanical-leaf-bottom-l {
+        position: absolute;
+        left: -15px;
+        bottom: 20px;
+        width: 140px;
+        pointer-events: none;
+        opacity: 0.85;
+        z-index: 1;
+    }
+
+    .botanical-leaf-bottom-r {
+        position: absolute;
+        right: -15px;
+        bottom: 20px;
+        width: 140px;
+        pointer-events: none;
+        opacity: 0.85;
+        z-index: 1;
+    }
+
+    .roles-card-shell {
+        position: relative;
+        z-index: 2;
+    }
+
+    .role-dual-card {
+        background: #ffffff;
+        border: 1px solid var(--fx-card-border);
+        border-radius: 18px;
+        padding: 14px;
+        display: flex;
+        flex-direction: row;
+        gap: 18px;
+        height: 100%;
+        box-shadow: 0 8px 24px rgba(6, 78, 59, 0.05);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .role-dual-card:hover {
+        transform: translateY(-5px);
+        border-color: #92d8bf;
+        box-shadow: 0 16px 36px rgba(6, 78, 59, 0.1);
+    }
+
+    .role-photo-container {
+        width: 44%;
+        min-height: 240px;
+        border-radius: 12px;
+        overflow: hidden;
+        flex-shrink: 0;
+        position: relative;
+    }
+
+    .role-photo-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.4s ease;
+    }
+
+    .role-dual-card:hover .role-photo-container img {
+        transform: scale(1.04);
+    }
+
+    .role-details-container {
+        flex: 1;
+        padding: 8px 8px 8px 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .role-heading-badge-wrap {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 0.9rem;
+    }
+
+    .role-emblem-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .badge-farmer-green {
+        background: var(--fx-green-primary);
+        box-shadow: 0 4px 10px rgba(0, 122, 80, 0.25);
+    }
+
+    .badge-company-blue {
+        background: var(--fx-blue-badge);
+        box-shadow: 0 4px 10px rgba(0, 111, 156, 0.25);
+    }
+
+    .role-name-text {
+        color: var(--fx-teal-heading);
+        font-size: 1.3rem;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+
+    .role-checklist-wrap {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1.2rem 0;
+    }
+
+    .role-check-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--fx-teal-body);
+        margin-bottom: 0.5rem;
+    }
+
+    .role-check-symbol {
+        color: var(--fx-green-primary);
+        font-size: 0.9rem;
+        font-weight: 900;
+    }
+
+    .btn-role-cta-action {
+        background: var(--fx-green-deep);
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.88rem;
+        font-weight: 700;
+        padding: 0.65rem 1.25rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        align-self: flex-start;
+        box-shadow: 0 4px 12px rgba(6, 78, 59, 0.2);
+    }
+
+    .btn-role-cta-action:hover {
+        background: var(--fx-forest-dark);
+        color: #ffffff;
+        transform: translateX(3px);
+    }
+
+    /* ==========================================================================
+       5. Footer Section
+       ========================================================================== */
+    .farmex-site-footer {
+        background: #004d38;
+        color: #ffffff;
+        padding: 38px 0 22px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .footer-top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .footer-brand-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+
+    .footer-brand-logo-icon {
+        width: 38px;
+        height: 38px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 1.15rem;
+    }
+
+    .footer-brand-title {
+        color: #ffffff;
+        font-size: 1.35rem;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.02em;
+    }
+
+    .footer-brand-subtext {
+        color: #a2e3cc;
+        font-size: 0.66rem;
+        font-weight: 600;
+        margin-top: 3px;
+    }
+
+    .footer-nav-menu {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        flex-wrap: wrap;
+    }
+
+    .footer-nav-link-item {
+        color: #d8f5eb;
+        text-decoration: none;
+        font-size: 0.86rem;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    .footer-nav-link-item:hover {
+        color: #ffffff;
+        text-decoration: underline;
+    }
+
+    .footer-social-row {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .social-btn-link {
+        color: #d8f5eb;
+        font-size: 1.1rem;
+        text-decoration: none;
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .social-btn-link:hover {
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+
+    .footer-bottom-meta {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding-top: 14px;
+    }
+
+    .footer-copyright-note {
+        color: #7dbfa9;
+        font-size: 0.74rem;
+        margin: 0;
+    }
+
+    .footer-copyright-note a {
+        color: #7dbfa9;
+        text-decoration: none;
+    }
+
+    .footer-copyright-note a:hover {
+        color: #ffffff;
+        text-decoration: underline;
+    }
+
+    /* ==========================================================================
+       Responsive Rules
+       ========================================================================== */
+    @media (max-width: 991px) {
+        .header-nav-list {
+            margin: 1rem 0;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .header-nav-item .nav-link-item.active::after {
+            display: none;
+        }
+
+        .header-actions {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .hero-container {
+            padding-top: 2rem;
+            min-height: auto;
+        }
+
+        .hero-main-title {
+            font-size: 2.2rem;
+        }
+
+        .ecosystem-stage {
+            margin-top: 2rem;
+            height: 320px;
+        }
+
+        .role-dual-card {
+            flex-direction: column;
+        }
+
+        .role-photo-container {
+            width: 100%;
+            height: 200px;
+        }
+
+        .footer-top-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .footer-bottom-meta {
+            justify-content: flex-start;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .hero-btn-group {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .btn-hero-green,
+        .btn-hero-card {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .ecosystem-stage {
+            transform: scale(0.85);
+            margin: 0 -20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="farmex-page-root">
+
+    <!-- 1. Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg farmex-header"
+        style="background: #ffffff !important; background-color: #ffffff !important;">
+        <div class="container">
+            <!-- FARMEX Brand Logo -->
+            <a class="brand-container" href="{% url 'home' %}">
+                <div class="brand-icon-emblem">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div class="brand-name-group">
+                    <span class="brand-title-text">FARMEX</span>
+                    <span class="brand-subtitle-text">Subsidy Integrity System</span>
+                </div>
+            </a>
+
+            <!-- Mobile Toggler -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#farmexHeaderNav" aria-controls="farmexHeaderNav" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <i class="fas fa-bars text-success fs-4"></i>
+            </button>
+
+           
+
+                <div class="header-actions">
+                    {% if user.is_authenticated %}
+                    {% if user.farmer %}
+                    <a href="{% url 'farmer_dashboard' %}" class="btn-login-outline">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    {% elif user.company %}
+                    <a href="{% url 'company_dashboard' %}" class="btn-login-outline">
+                        <i class="fas fa-building"></i> Dashboard
+                    </a>
+                    {% elif user.is_superuser %}
+                    <a href="{% url 'admin_dashboard' %}" class="btn-login-outline">
+                        <i class="fas fa-shield-alt"></i> Admin Panel
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}" class="btn-register-solid">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn-login-outline">
+                        <i class="fa-regular fa-user"></i> Login
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn-register-solid dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="fas fa-user-plus"></i> Register
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" style="border-radius: 10px;">
+                            <li>
+                                <a class="dropdown-item py-2 fw-semibold text-success"
+                                    href="{% url 'farmer_register' %}">
+                                    <i class="fas fa-leaf me-2"></i> As a Farmer
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider my-1">
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 fw-semibold text-secondary"
+                                    href="{% url 'company_register' %}">
+                                    <i class="fas fa-building me-2"></i> As a Company
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 2. Hero Section -->
+    <header class="hero-container" id="hero-banner">
+        <div class="hero-atmosphere"></div>
+        <div class="container hero-inner-row">
+            <div class="row align-items-center">
+
+                <!-- Left Column: Copy & Action Buttons -->
+                <div class="col-lg-7 col-md-12">
+                    <h1 class="hero-main-title">
+                        Connecting Farmers with<br>
+                        Verified Subsidy Providers
+                    </h1>
+                    <p class="hero-main-subtitle">
+                        FARMEX is a transparent subsidy management platform where verified companies and organizations
+                        publish subsidy schemes, and eligible farmers can discover, apply and track benefits securely.
+                    </p>
+                    <div class="hero-btn-group">
+                        <a href="{% url 'login' %}" class="btn-hero-green">
+                            <i class="fas fa-leaf"></i>
+                            <span>Explore Schemes</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Column: Connected Ecosystem Diagram -->
+                <div class="col-lg-5 col-md-12 mt-4 mt-lg-0">
+                    <div class="ecosystem-stage">
+
+                        <!-- SVG Concentric Orbit Rings & Radiating Dotted Lines -->
+                        <svg class="ecosystem-svg-layer" viewBox="0 0 440 380" fill="none">
+                            <!-- Background Concentric Dotted Circles centered on FARMEX Hub -->
+                            <circle cx="220" cy="285" r="85" stroke="rgba(255, 255, 255, 0.65)" stroke-width="1.8"
+                                stroke-dasharray="4 4" />
+                            <circle cx="220" cy="285" r="135" stroke="rgba(255, 255, 255, 0.55)" stroke-width="1.5"
+                                stroke-dasharray="5 5" />
+                            <circle cx="220" cy="285" r="185" stroke="rgba(255, 255, 255, 0.4)" stroke-width="1.2"
+                                stroke-dasharray="6 6" />
+
+                            <!-- Radiating Spoke Lines -->
+                            <line x1="220" y1="285" x2="220" y2="90" stroke="rgba(255, 255, 255, 0.45)"
+                                stroke-width="1.2" stroke-dasharray="4 4" />
+                            <line x1="220" y1="285" x2="60" y2="285" stroke="rgba(255, 255, 255, 0.35)"
+                                stroke-width="1.2" stroke-dasharray="4 4" />
+                            <line x1="220" y1="285" x2="380" y2="285" stroke="rgba(255, 255, 255, 0.35)"
+                                stroke-width="1.2" stroke-dasharray="4 4" />
+
+                            <!-- Connecting Lines from Farmers badge to Hub -->
+                            <line x1="90" y1="125" x2="185" y2="245" stroke="#ffffff" stroke-width="2.2"
+                                stroke-dasharray="5 4" stroke-linecap="round" />
+                            <!-- Connecting Lines from Companies badge to Hub -->
+                            <line x1="350" y1="125" x2="255" y2="245" stroke="#ffffff" stroke-width="2.2"
+                                stroke-dasharray="5 4" stroke-linecap="round" />
+
+                            <!-- Glowing Accent Nodes -->
+                            <circle cx="90" cy="125" r="5" fill="#34d399" />
+                            <circle cx="350" cy="125" r="5" fill="#34d399" />
+                            <circle cx="185" cy="245" r="5" fill="#34d399" />
+                            <circle cx="255" cy="245" r="5" fill="#34d399" />
+                            <circle cx="220" cy="150" r="3.5" fill="#ffffff" />
+                            <circle cx="140" cy="220" r="3.5" fill="#ffffff" />
+                            <circle cx="300" cy="220" r="3.5" fill="#ffffff" />
+                        </svg>
+
+                        <!-- Farmers Node -->
+                        <div class="eco-node-farmers">
+                            <div class="eco-node-box">
+                                <div class="eco-node-circle">
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M12 2C9.5 2 7.2 3.2 6.1 5.2C4.5 5.6 3 6.8 3 8.5C3 9.3 3.5 10 4.2 10.4C4.1 10.9 4 11.4 4 12C4 16.4 7.6 20 12 20C16.4 20 20 16.4 20 12C20 11.4 19.9 10.9 19.8 10.4C20.5 10 21 9.3 21 8.5C21 6.8 19.5 5.6 17.9 5.2C16.8 3.2 14.5 2 12 2ZM12 4C13.8 4 15.4 4.9 16.3 6.4C15.1 6.8 13.6 7 12 7C10.4 7 8.9 6.8 7.7 6.4C8.6 4.9 10.2 4 12 4ZM12 8.5C14.2 8.5 16.3 8.8 18 9.3V12C18 15.3 15.3 18 12 18C8.7 18 6 15.3 6 12V9.3C7.7 8.8 9.8 8.5 12 8.5ZM10 11C9.4 11 9 11.4 9 12C9 12.6 9.4 13 10 13C10.6 13 11 12.6 11 12C11 11.4 10.6 11 10 11ZM14 11C13.4 11 13 11.4 13 12C13 12.6 13.4 13 14 13C14.6 13 15 12.6 15 12C15 11.4 14 11 14 11ZM12 14C10.9 14 10 14.4 10 15H14C14 14.4 13.1 14 12 14Z" />
+                                    </svg>
+                                </div>
+                                <span class="eco-node-title">Farmers</span>
+                            </div>
+                        </div>
+
+                        <!-- Companies & Organizations Node -->
+                        <div class="eco-node-companies">
+                            <div class="eco-node-box">
+                                <div class="eco-node-circle">
+                                    <i class="fas fa-building text-success" style="font-size: 1.4rem;"></i>
+                                </div>
+                                <span class="eco-node-title">Companies &amp;<br>Organizations</span>
+                            </div>
+                        </div>
+
+                        <!-- Central FARMEX Hub Node -->
+                        <div class="eco-node-hub">
+                            <div class="eco-hub-pulse-ring">
+                                <div class="eco-hub-circle">
+                                    <i class="fas fa-leaf eco-hub-leaf"></i>
+                                    <span class="eco-hub-name">FARMEX</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+    </header>
+
+    <!-- 3. Why Choose FARMEX? Section -->
+    <section class="why-section" id="why-choose-farmex">
+        <div class="container">
+            <div class="section-title-wrap">
+                <h2 class="section-main-heading">Why Choose FARMEX?</h2>
+                <p class="section-main-subheading">
+                    A secure and transparent platform for a stronger agricultural future.
+                </p>
+            </div>
+
+            <div class="row g-4 justify-content-center">
+                <!-- Card 1: Verified Providers -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="feature-item-card">
+                        <div class="feature-icon-badge">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3 class="feature-item-title">Verified Providers</h3>
+                        <p class="feature-item-desc">
+                            Only approved companies and agencies can publish schemes.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card 2: Eligible Beneficiaries -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="feature-item-card">
+                        <div class="feature-icon-badge">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <h3 class="feature-item-title">Eligible Beneficiaries</h3>
+                        <p class="feature-item-desc">
+                            Subsidies reach genuine farmers and deserving applicants.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card 3: Fraud Prevention -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="feature-item-card">
+                        <div class="feature-icon-badge">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h3 class="feature-item-title">Fraud Prevention</h3>
+                        <p class="feature-item-desc">
+                            Advanced verification and document validation ensure fair access.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card 4: Transparent Tracking -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="feature-item-card">
+                        <div class="feature-icon-badge">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="feature-item-title">Transparent Tracking</h3>
+                        <p class="feature-item-desc">
+                            Real-time application monitoring and updates for complete transparency.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Choose Your Role Section -->
+    <section class="roles-section-wrapper" id="choose-role-section">
+
+        <!-- Left Botanical Leaf Foliage SVG (Fresh Tea Leaves with Veins) -->
+        <svg class="botanical-leaf-left" viewBox="0 0 160 280" fill="none">
+            <g opacity="0.85">
+                <!-- Leaf 1 (Top Left) -->
+                <path d="M-15,140 C25,125 75,80 90,15 C75,55 35,90 -15,105 Z" fill="url(#leafGrad1)" />
+                <path d="M-15,140 C20,105 60,65 90,15" stroke="#1b5e20" stroke-width="1.8" stroke-linecap="round" />
+                <path d="M20,105 C40,95 65,70 65,70" stroke="#2e7d32" stroke-width="1" />
+                <path d="M40,80 C60,75 80,50 80,50" stroke="#2e7d32" stroke-width="1" />
+
+                <!-- Leaf 2 (Mid Center) -->
+                <path d="M-15,140 C40,140 100,120 135,70 C100,105 45,130 -15,140 Z" fill="url(#leafGrad2)" />
+                <path d="M-15,140 C35,135 90,110 135,70" stroke="#1b5e20" stroke-width="1.8" stroke-linecap="round" />
+                <path d="M40,130 C70,120 105,95 105,95" stroke="#2e7d32" stroke-width="1" />
+                <path d="M70,115 C95,110 120,85 120,85" stroke="#2e7d32" stroke-width="1" />
+
+                <!-- Leaf 3 (Lower Center) -->
+                <path d="M-15,140 C35,160 95,180 125,235 C90,195 30,175 -15,155 Z" fill="url(#leafGrad1)" />
+                <path d="M-15,140 C35,165 85,190 125,235" stroke="#1b5e20" stroke-width="1.8" stroke-linecap="round" />
+
+                <!-- Leaf 4 (Bottom) -->
+                <path d="M-15,140 C15,160 65,215 75,275 C55,220 10,175 -15,150 Z" fill="url(#leafGrad3)" />
+            </g>
+            <defs>
+                <linearGradient id="leafGrad1" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#48bb78" />
+                    <stop offset="100%" stop-color="#22543d" />
+                </linearGradient>
+                <linearGradient id="leafGrad2" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#68d391" />
+                    <stop offset="100%" stop-color="#276749" />
+                </linearGradient>
+                <linearGradient id="leafGrad3" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#38a169" />
+                    <stop offset="100%" stop-color="#1c4532" />
+                </linearGradient>
+            </defs>
+        </svg>
+
+        <!-- Right Botanical Leaf Foliage SVG (Fresh Tea Leaves with Veins) -->
+        <svg class="botanical-leaf-right" viewBox="0 0 160 280" fill="none">
+            <g opacity="0.85">
+                <!-- Leaf 1 (Top Right) -->
+                <path d="M175,140 C135,125 85,80 70,15 C85,55 125,90 175,105 Z" fill="url(#leafGrad1R)" />
+                <path d="M175,140 C140,105 100,65 70,15" stroke="#1b5e20" stroke-width="1.8" stroke-linecap="round" />
+                <path d="M140,105 C120,95 95,70 95,70" stroke="#2e7d32" stroke-width="1" />
+
+                <!-- Leaf 2 (Mid Center) -->
+                <path d="M175,140 C120,140 60,120 25,70 C60,105 115,130 175,140 Z" fill="url(#leafGrad2R)" />
+                <path d="M175,140 C125,135 70,110 25,70" stroke="#1b5e20" stroke-width="1.8" stroke-linecap="round" />
+
+                <!-- Leaf 3 (Lower Center) -->
+                <path d="M175,140 C125,160 65,180 35,235 C70,195 130,175 175,155 Z" fill="url(#leafGrad1R)" />
+                <path d="M175,140 C125,165 75,190 35,235" stroke="#1b5e20" stroke-width="1.8" stroke-linecap="round" />
+
+                <!-- Leaf 4 (Bottom) -->
+                <path d="M175,140 C145,160 95,215 85,275 C105,220 150,175 175,150 Z" fill="url(#leafGrad3R)" />
+            </g>
+            <defs>
+                <linearGradient id="leafGrad1R" x1="1" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#48bb78" />
+                    <stop offset="100%" stop-color="#22543d" />
+                </linearGradient>
+                <linearGradient id="leafGrad2R" x1="1" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#68d391" />
+                    <stop offset="100%" stop-color="#276749" />
+                </linearGradient>
+                <linearGradient id="leafGrad3R" x1="1" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#38a169" />
+                    <stop offset="100%" stop-color="#1c4532" />
+                </linearGradient>
+            </defs>
+        </svg>
+
+        <!-- Bottom Left Foliage Accent -->
+        <svg class="botanical-leaf-bottom-l" viewBox="0 0 160 200" fill="none">
+            <g opacity="0.8">
+                <path d="M-10,180 C35,160 80,115 100,50 C75,90 30,130 -10,150 Z" fill="#38a169" />
+                <path d="M-10,180 C45,175 110,155 140,110 C95,145 40,168 -10,180 Z" fill="#22543d" />
+            </g>
+        </svg>
+
+        <!-- Bottom Right Foliage Accent -->
+        <svg class="botanical-leaf-bottom-r" viewBox="0 0 160 200" fill="none">
+            <g opacity="0.8">
+                <path d="M170,180 C125,160 80,115 60,50 C85,90 130,130 170,150 Z" fill="#38a169" />
+                <path d="M170,180 C115,175 50,155 20,110 C65,145 120,168 170,180 Z" fill="#22543d" />
+            </g>
+        </svg>
+
+        <div class="container roles-card-shell">
+            <div class="section-title-wrap">
+                <h2 class="section-main-heading">Choose Your Role</h2>
+                <p class="section-main-subheading">
+                    Whether you are a farmer or a company, FARMEX is here for you.
+                </p>
+            </div>
+
+            <div class="row g-4 justify-content-center">
+                <!-- Role Card 1: For Farmers -->
+                <div class="col-12 col-lg-6">
+                    <div class="role-dual-card">
+                        <div class="role-photo-container">
+                            <img src="{% static 'images/farmer_field_card.jpg' %}"
+                                alt="Pristine rolling terraced tea farm rows" />
+                        </div>
+                        <div class="role-details-container">
+                            <div>
+                                <div class="role-heading-badge-wrap">
+                                    <div class="role-emblem-badge badge-farmer-green">
+                                        <i class="fas fa-leaf"></i>
+                                    </div>
+                                    <h3 class="role-name-text">For Farmers</h3>
+                                </div>
+                                <ul class="role-checklist-wrap">
+                                    <li class="role-check-row">
+                                        <i class="fas fa-check role-check-symbol"></i>
+                                        <span>Browse available schemes</span>
+                                    </li>
+                                    <li class="role-check-row">
+                                        <i class="fas fa-check role-check-symbol"></i>
+                                        <span>Apply online</span>
+                                    </li>
+                                    <li class="role-check-row">
+                                        <i class="fas fa-check role-check-symbol"></i>
+                                        <span>Track application status</span>
+                                    </li>
+                                    <li class="role-check-row">
+                                        <i class="fas fa-check role-check-symbol"></i>
+                                        <span>Receive notifications</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <a href="{% url 'farmer_register' %}" class="btn-role-cta-action">
+                                <span>Register as Farmer</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role Card 2: For Companies -->
+                <div class="col-12 col-lg-6">
+                    <div class="role-dual-card">
+                        <div class="role-photo-container">
+                            <img src="{% static 'images/company_building.jpg' %}"
+                                alt="Modern reflective glass corporate skyscraper" />
+                        </div>
+                        <div class="role-details-container">
+                            <div>
+                                <div class="role-heading-badge-wrap">
+                                    <div class="role-emblem-badge badge-company-blue">
+                                        <i class="fas fa-building-columns"></i>
+                                    </div>
+                                    <h3 class="role-name-text">For Companies</h3>
+                                </div>
+                                <ul class="role-checklist-wrap">
+                                    <li class="role-check-row">
+                                        <i class="fas fa-check role-check-symbol"></i>
+                                        <span>Create subsidy programs</span>
+                                    </li>
+                                    <li class="role-check-row">
+                                        <i class="fas fa-check role-check-symbol"></i>
+                                        <span>Publish schemes</span>
+                                    </li>
+                                    <li class="role-check-row">
+                                        <i class="fas fa-check role-check-symbol"></i>
+                                        <span>Review applications</span>
+                                    </li>
+                                    <li class="role-check-row">
+                                        <i class="fas fa-check role-check-symbol"></i>
+                                        <span>Monitor subsidy distribution</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <a href="{% url 'company_register' %}" class="btn-role-cta-action">
+                                <span>Register as Provider</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Footer Section -->
+    <footer class="farmex-site-footer" id="site-footer">
+        <div class="container">
+            <div class="footer-top-row">
+                <!-- Brand Info -->
+                <a class="footer-brand-wrap" href="{% url 'home' %}">
+                    <div class="footer-brand-logo-icon">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <div class="brand-name-group">
+                        <span class="footer-brand-title">FARMEX</span>
+                        <span class="footer-brand-subtext">Subsidy Integrity System</span>
+                    </div>
+                </a>
+
+                <!-- Navigation Links -->
+                <ul class="footer-nav-menu">
+                    <li><a href="{% url 'farmer_register' %}" class="footer-nav-link-item">Farmers</a></li>
+                    <li><a href="{% url 'company_register' %}" class="footer-nav-link-item">Companies</a></li>
+                    <li><a href="#why-choose-farmex" class="footer-nav-link-item">Schemes</a></li>
+                    <li><a href="#why-choose-farmex" class="footer-nav-link-item">About Us</a></li>
+                    <li><a href="#why-choose-farmex" class="footer-nav-link-item">Support</a></li>
+                    <li><a href="#site-footer" class="footer-nav-link-item">Contact</a></li>
+                </ul>
+
+                <!-- Social Icons -->
+                <div class="footer-social-row">
+                    <a href="https://facebook.com" target="_blank" class="social-btn-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://youtube.com" target="_blank" class="social-btn-link" aria-label="YouTube">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                    <a href="https://linkedin.com" target="_blank" class="social-btn-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="https://twitter.com" target="_blank" class="social-btn-link"
+                        aria-label="X (formerly Twitter)">
+                        <i class="fab fa-x-twitter"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Bottom Copyright & Legal -->
+            <div class="footer-bottom-meta">
+                <p class="footer-copyright-note">
+                    &copy; 2026 FARMEX. All rights reserved. &nbsp;|&nbsp;
+                    <a href="#site-footer">Privacy Policy</a> &nbsp;|&nbsp;
+                    <a href="#site-footer">Terms of Service</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+</div>
+{% endblock %}

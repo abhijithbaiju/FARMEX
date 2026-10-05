@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FARMEX{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(180deg, #f6fff8 0%, #f8f9fa 100%); font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .navbar-brand { font-weight: bold; font-size: 1.4rem; }
+        .notification-badge { position: relative; top: -8px; right: 4px; }
+        .card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-radius: 12px; }
+        .btn-primary { background: #2d6a4f; border-color: #2d6a4f; }
+        .btn-primary:hover { background: #1b4332; border-color: #1b4332; }
+        .navbar:not(.farmex-header) { background: #2d6a4f !important; }
+        .status-pending { color: #f77f00; font-weight: 600; }
+        .status-approved { color: #2d6a4f; font-weight: 600; }
+        .status-rejected { color: #c1121f; font-weight: 600; }
+        .status-fraud { color: #9b2226; font-weight: 600; }
+        .dashboard-shell { max-width: 1240px; margin: 0 auto; }
+        .dashboard-hero { background: linear-gradient(135deg, #edf9f1, #ffffff); border: 1px solid rgba(45,106,79,.08); }
+        .eyebrow { color: #2d6a4f; font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+        .badge-chip { display: inline-flex; align-items: center; padding: .6rem .9rem; border-radius: 999px; background: #ebf7ee; color: #1b4332; font-weight: 600; }
+        .metric-card { border-radius: 1.2rem; padding: 1.3rem; min-height: 140px; background: #fff; box-shadow: 0 8px 20px rgba(17, 24, 39, 0.04); display: flex; flex-direction: column; justify-content: center; border-left: 5px solid #2d6a4f; }
+        .metric-card.warning { border-left-color: #f4b942; }
+        .metric-card.primary { border-left-color: #3b82f6; }
+        .metric-card.danger { border-left-color: #ef4444; }
+        .metric-value { font-size: 2rem; font-weight: 800; color: #1b4332; }
+        .metric-label { color: #5b6477; font-weight: 600; }
+        .section-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem; }
+        .scheme-card { background: linear-gradient(180deg, #ffffff 0%, #fafdfb 100%); border: 1px solid rgba(45,106,79,.08); }
+        footer { background: #2d6a4f; color: white; padding: 20px 0; margin-top: 60px; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+{% block body %}
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'home' %}">🌾 FARMEX</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                {% if user.is_authenticated %}
+                    {% if user.farmer %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'farmer_dashboard' %}"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a></li>
+                    {% elif user.company %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'company_dashboard' %}"><i class="fas fa-building me-1"></i>Dashboard</a></li>
+                    {% elif user.is_superuser %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'admin_dashboard' %}"><i class="fas fa-shield-alt me-1"></i>Admin</a></li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'notifications' %}">
+                            <i class="fas fa-bell"></i>
+                            {% if unread_notification_count > 0 %}
+                            <span class="badge bg-danger notification-badge">{{ unread_notification_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'password_change' %}"><i class="fas fa-key me-1"></i>Change Password</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-1"></i>Logout</a></li>
+                {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+                    <li class="nav-item dropdown ms-2">
+                        <button class="nav-link btn btn-outline-light px-3 dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Register
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'farmer_register' %}">As a Farmer</a></li>
+                            <li><a class="dropdown-item" href="{% url 'company_register' %}">As a Company</a></li>
+                        </ul>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+</div>
+
+<footer class="text-center mt-5">
+    <div class="container">
+        <p class="mb-0">FARMEX — Subsidy Integrity System</p>
+    </div>
+</footer>
+{% endblock body %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

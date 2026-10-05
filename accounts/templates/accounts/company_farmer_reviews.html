@@ -1,0 +1,161 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Farmer Reviews - {{ company.company_name }}{% endblock %}
+{% block extra_css %}
+<style>
+  .company-reviews-page { max-width: 1240px; margin: 0 auto; padding-bottom: 24px; }
+  .company-reviews-heading { margin-bottom: 22px; }
+  .company-reviews-heading h1 { margin: 0 0 6px; color: #173d2b; font-size: 1.7rem; font-weight: 800; }
+  .company-reviews-heading p { margin: 0; color: #66756c; }
+  .company-reviews-summary { display: grid; grid-template-columns: minmax(220px, .85fr) minmax(330px, 1.15fr); gap: 24px; margin-bottom: 20px; padding: 22px 24px; background: #fff; border: 1px solid #dce9e1; border-radius: 11px; box-shadow: 0 4px 14px rgba(21,58,39,.045); }
+  .summary-kicker { margin-bottom: 7px; color: #68786e; font-size: .8rem; font-weight: 650; }
+  .summary-score { display: flex; align-items: baseline; gap: 9px; color: #1c5334; }
+  .summary-score .summary-star { color: #c28b21; font-size: 1.15rem; }
+  .summary-score strong { font-size: 2rem; font-weight: 800; line-height: 1; }
+  .summary-score span:last-child { color: #718077; font-size: .9rem; }
+  .summary-count { margin-top: 7px; color: #75837a; font-size: .8rem; }
+  .distribution-list { display: grid; align-content: center; gap: 6px; }
+  .distribution-row { display: grid; grid-template-columns: 88px minmax(40px, 1fr) 28px; align-items: center; gap: 10px; color: #718077; font-size: .76rem; }
+  .distribution-stars { color: #bd8922; white-space: nowrap; }
+  .distribution-track { height: 6px; overflow: hidden; background: #edf2ee; border-radius: 999px; }
+  .distribution-fill { display: block; height: 100%; background: #61956a; border-radius: inherit; }
+  .distribution-count { color: #4d5f53; font-weight: 700; text-align: right; }
+  .reviews-filter-form { display: grid; grid-template-columns: minmax(190px, 1fr) minmax(160px, 1fr) auto; gap: 12px; align-items: end; margin-bottom: 18px; padding: 15px; background: #fff; border: 1px solid #dce9e1; border-radius: 9px; }
+  .reviews-filter label { display: block; margin-bottom: 5px; color: #485c4e; font-size: .76rem; font-weight: 700; }
+  .reviews-filter select { width: 100%; min-height: 40px; padding: 8px 10px; color: #304438; background: #fff; border: 1px solid #cfddd3; border-radius: 7px; font: inherit; font-size: .84rem; }
+  .reviews-filter button { min-height: 40px; padding: 8px 16px; color: #fff; background: #236b45; border: 1px solid #236b45; border-radius: 7px; font: inherit; font-size: .84rem; font-weight: 700; }
+  .reviews-filter button:hover { background: #185637; }
+  .company-review-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+  .company-review-card { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 17px; background: #fff; border: 1px solid #dce9e1; border-radius: 9px; box-shadow: 0 3px 12px rgba(21,58,39,.04); }
+  .company-review-stars { color: #c28b21; font-size: .96rem; white-space: nowrap; }
+  .company-review-comment { flex: 1; color: #3e5145; font-size: .88rem; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-line; }
+  .company-review-meta { display: flex; justify-content: space-between; gap: 9px; padding-top: 9px; border-top: 1px solid #edf2ee; color: #76837a; font-size: .72rem; }
+  .company-review-verified { color: #34734b; font-weight: 700; }
+  .company-review-scheme { color: #244a34; font-size: .91rem; font-weight: 750; line-height: 1.35; }
+  .company-review-company { color: #718077; font-size: .78rem; }
+  .company-reviews-empty { padding: 34px 18px; color: #708077; background: #fff; border: 1px dashed #ccdcd1; border-radius: 9px; text-align: center; }
+  .company-reviews-empty strong { display: block; margin-bottom: 5px; color: #294735; }
+  .company-review-pagination { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 19px; }
+  .company-review-pagination a, .company-review-pagination span { min-width: 35px; padding: 7px 10px; color: #45614d; background: #fff; border: 1px solid #d8e4dc; border-radius: 6px; font-size: .8rem; text-align: center; text-decoration: none; }
+  .company-review-pagination .current { color: #fff; background: #236b45; border-color: #236b45; }
+  .company-review-pagination .disabled { color: #a0aaa3; background: #f6f8f6; }
+  @media (max-width: 900px) {
+    .company-reviews-summary { grid-template-columns: 1fr 1.1fr; }
+    .company-review-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 620px) {
+    .company-reviews-heading h1 { font-size: 1.45rem; }
+    .company-reviews-summary { grid-template-columns: 1fr; gap: 18px; padding: 17px; }
+    .reviews-filter-form { grid-template-columns: 1fr; padding: 12px; }
+    .reviews-filter button { width: 100%; }
+    .company-review-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="company-reviews-page">
+  <header class="company-reviews-heading">
+    <h1>Farmer Reviews</h1>
+    <p>View feedback and ratings submitted by farmers for your subsidy schemes.</p>
+  </header>
+
+  <section class="company-reviews-summary" aria-label="Company farmer rating summary">
+    {% if review_count %}
+    <div>
+      <div class="summary-kicker">Overall Rating</div>
+      <div class="summary-score">
+        <span class="summary-star" aria-hidden="true">★</span>
+        <strong>{{ overall_rating|floatformat:1 }}</strong>
+        <span>/ 5</span>
+      </div>
+      <div class="summary-count">Based on {{ review_count }} farmer review{% if review_count != 1 %}s{% endif %}</div>
+    </div>
+    <div class="distribution-list">
+      {% for row in rating_distribution %}
+      <div class="distribution-row">
+        <span class="distribution-stars">{{ row.stars }}</span>
+        <span class="distribution-track"><span class="distribution-fill" style="width:{% widthratio row.count review_count 100 %}%;"></span></span>
+        <span class="distribution-count">{{ row.count }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div>
+      <div class="summary-kicker">Overall Rating</div>
+      <strong class="company-review-scheme">No reviews yet</strong>
+      <div class="summary-count">Farmer ratings for your schemes will appear here.</div>
+    </div>
+    <div class="distribution-list" aria-label="No rating distribution yet">
+      {% for row in rating_distribution %}
+      <div class="distribution-row">
+        <span class="distribution-stars">{{ row.stars }}</span>
+        <span class="distribution-track"><span class="distribution-fill" style="width:0%;"></span></span>
+        <span class="distribution-count">0</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+
+  <form class="reviews-filter-form" method="get" action="{% url 'company_farmer_reviews' %}">
+    <div class="reviews-filter">
+      <label for="scheme-filter">Scheme</label>
+      <select name="scheme" id="scheme-filter">
+        <option value="">All Schemes</option>
+        {% for scheme in company_schemes %}
+        <option value="{{ scheme.id }}" {% if selected_scheme == scheme.id|stringformat:'s' %}selected{% endif %}>{{ scheme.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="reviews-filter">
+      <label for="rating-filter">Rating</label>
+      <select name="rating" id="rating-filter">
+        <option value="">All Ratings</option>
+        {% for rating in "54321" %}
+        <option value="{{ rating }}" {% if selected_rating == rating %}selected{% endif %}>{{ rating }} Star{% if rating != "1" %}s{% endif %}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit"><i class="fa-solid fa-filter me-1" aria-hidden="true"></i>Apply Filters</button>
+  </form>
+
+  {% if review_cards %}
+  <section class="company-review-grid" aria-label="Farmer reviews for company schemes">
+    {% for card in review_cards %}
+    <article class="company-review-card">
+      <div class="company-review-stars" aria-label="{{ card.feedback.rating }} out of 5 stars">{{ card.stars }}</div>
+      <div class="company-review-comment">“{{ card.feedback.comment }}”</div>
+      <div class="company-review-meta">
+        <span class="company-review-verified"><i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>Verified Farmer</span>
+        <time datetime="{{ card.feedback.created_at|date:'Y-m-d' }}">{{ card.feedback.created_at|date:"d M Y" }}</time>
+      </div>
+      <div>
+        <div class="company-review-scheme">Scheme: {{ card.feedback.application.scheme.name }}</div>
+        <div class="company-review-company">Company: {{ card.feedback.company.company_name }}</div>
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+  {% else %}
+  <div class="company-reviews-empty">
+    <strong>No farmer reviews yet</strong>
+    <span>Reviews from applicants will appear here when farmers submit feedback for your schemes.</span>
+  </div>
+  {% endif %}
+
+  {% if page_obj.paginator.num_pages > 1 %}
+  <nav class="company-review-pagination" aria-label="Review pages">
+    {% if page_obj.has_previous %}
+    <a href="?scheme={{ selected_scheme }}&amp;rating={{ selected_rating }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>
+    {% else %}<span class="disabled">Previous</span>{% endif %}
+    {% for page_number in page_numbers %}
+      {% if page_number == page_obj.number %}<span class="current" aria-current="page">{{ page_number }}</span>
+      {% else %}<a href="?scheme={{ selected_scheme }}&amp;rating={{ selected_rating }}&amp;page={{ page_number }}">{{ page_number }}</a>{% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <a href="?scheme={{ selected_scheme }}&amp;rating={{ selected_rating }}&amp;page={{ page_obj.next_page_number }}">Next</a>
+    {% else %}<span class="disabled">Next</span>{% endif %}
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

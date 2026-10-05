@@ -1,0 +1,99 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Applications{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="fw-bold">📬 Applications {% if selected_scheme %}for {{ selected_scheme.name }}{% endif %}</h3>
+  <div>
+    <a href="{% url 'view_applications' %}" class="btn btn-outline-secondary btn-sm me-2">All Schemes</a>
+    {% for scheme in schemes %}
+    <a href="{% url 'view_applications_scheme' scheme.id %}" class="btn btn-outline-primary btn-sm me-1">{{ scheme.name }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+{% if applications %}
+{% for app in applications %}
+<div class="card mb-3 p-3">
+  <div class="row align-items-start">
+    <div class="col-md-4">
+      <div class="small"><strong>Application Number:</strong> {{ app.application_number|default:"Pending" }}</div>
+      <h6 class="fw-bold mb-1">{{ app.farmer.full_name }}</h6>
+      <div class="small text-muted">📱 {{ app.farmer.phone }}</div>
+      <div class="small text-muted">🪪 Aadhaar: {{ app.farmer.aadhaar }}</div>
+      <div class="small text-muted">📍 Address: {{ app.farmer.address }}</div>
+      <div class="small text-muted">💰 Income: ₹{{ app.farmer.income }}</div>
+      <div class="small text-muted">🌾 Land: {{ app.farmer.land_size }} acres</div>
+      <div class="small text-muted">Categories:
+        {% for cat in app.farmer.categories.all %}<span class="badge bg-light text-dark">{{ cat.name }}</span>{% endfor %}
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="small"><strong>Scheme:</strong> {{ app.scheme.name }}</div>
+      <div class="small"><strong>Submitted:</strong> {{ app.submitted_at|date:"d M Y H:i" }}</div>
+      <div class="small"><strong>Status:</strong> <span class="status-{{ app.status }}">{{ app.get_status_display }}</span></div>
+      {% if app.form_data %}
+      <div class="small mt-2"><strong>Form Data:</strong>
+        {% for key, val in app.form_data.items %}
+          {% if key != 'csrfmiddlewaretoken' %}<div>{{ key }}: {{ val }}</div>{% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if app.documents %}
+      <div class="small mt-3">
+        <strong>Uploaded Documents:</strong>
+        <div class="d-flex flex-column gap-1 mt-1">
+          {% for key, path in app.documents.items %}
+          <a href="/media/{{ path }}" target="_blank" rel="noopener" class="link-primary">
+            <i class="fas fa-file-arrow-up me-1"></i>
+            {% if key == 'aadhaar_card' %}Aadhaar Card
+            {% elif key == 'income_certificate' %}Income Certificate
+            {% elif key == 'land_tax_document' %}Land Tax Document
+            {% else %}{{ key|title }}{% endif %}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% else %}
+      <div class="small text-muted mt-3">No documents uploaded.</div>
+      {% endif %}
+      {% if app.feedback %}
+      <div class="small mt-2 text-warning">⭐ {{ app.feedback.rating }}/5 — {{ app.feedback.comment|truncatechars:60 }}</div>
+      {% endif %}
+    </div>
+    <div class="col-md-4">
+      {% if app.status == 'pending' %}
+      <form method="post" class="mb-2">
+        {% csrf_token %}
+        <input type="hidden" name="application_id" value="{{ app.id }}">
+        <input type="hidden" name="action" value="approve">
+        <button type="submit" class="btn btn-success btn-sm w-100 mb-2" onclick="return confirm('Approve this application?')">✅ Approve</button>
+      </form>
+      <form method="post" class="mb-2">
+        {% csrf_token %}
+        <input type="hidden" name="application_id" value="{{ app.id }}">
+        <input type="hidden" name="action" value="reject">
+        <input type="text" name="reason" class="form-control form-control-sm mb-1" placeholder="Rejection reason" required>
+        <button type="submit" class="btn btn-danger btn-sm w-100" onclick="return confirm('Reject this application?')">❌ Reject</button>
+      </form>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="application_id" value="{{ app.id }}">
+        <input type="hidden" name="action" value="redflag">
+        <input type="text" name="reason" class="form-control form-control-sm mb-1" placeholder="Fraud reason" required>
+        <button type="submit" class="btn btn-dark btn-sm w-100" onclick="return confirm('Mark this application as FRAUD and redflag the user?')">🚨 Mark as Fraud / Redflag</button>
+      </form>
+      {% elif app.status == 'fraud' %}
+      <div class="alert alert-danger small py-2 mb-0">🚨 Fraud: {{ app.fraud_reason }}</div>
+      {% elif app.status == 'rejected' %}
+      <div class="text-muted small">Rejected: {{ app.rejection_reason }}</div>
+      {% else %}
+      <div class="text-success small fw-bold">✅ Approved on {{ app.reviewed_at|date:"d M Y" }}</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="alert alert-light">No applications found.</div>
+{% endif %}
+{% endblock %}

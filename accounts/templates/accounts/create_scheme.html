@@ -1,0 +1,508 @@
+{% extends 'accounts/base.html' %}
+{% block title %}{% if editing %}Edit Scheme{% else %}Create Scheme{% endif %}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card p-4">
+      <h3 class="fw-bold mb-4 text-success"><i class="fas fa-plus-circle me-2"></i>{% if editing %}Edit Scheme{% else %}Create New Scheme{% endif %}</h3>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Scheme Name *</label>
+          <input type="text" name="name" class="form-control" value="{{ scheme.name|default:'' }}" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Description *</label>
+          <textarea name="description" class="form-control" rows="3" required>{{ scheme.description|default:'' }}</textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Subsidy Amount (₹) *</label>
+          <input type="number" name="subsidy_amount" class="form-control" min="0" step="0.01" value="{{ scheme.subsidy_amount|default:'' }}" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="application-deadline">Last Date for Applications *</label>
+          <input type="date" id="application-deadline" name="application_deadline" class="form-control" min="{% now 'Y-m-d' %}" value="{{ application_deadline_value|default:'' }}" required>
+          <small class="form-text text-muted">Farmers can apply through this date. Edit the scheme to extend the application period.</small>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Actual Product Price (₹)</label>
+            <input type="number" name="actual_price" class="form-control" min="0" step="0.01" value="{{ scheme.actual_price|default:'' }}" placeholder="Optional">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Subsidy Scheme Image</label>
+            <input type="file" name="scheme_image" class="form-control" accept="image/*">
+            {% if scheme.scheme_image %}<small class="text-muted">Current image will be kept unless replaced.</small>{% endif %}
+          </div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Min Income (₹)</label>
+            <input type="number" name="min_income" class="form-control" min="0" value="{{ scheme.min_income|default:'' }}" placeholder="Leave blank for no limit">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Max Income (₹)</label>
+            <input type="number" name="max_income" class="form-control" min="0" value="{{ scheme.max_income|default:'' }}" placeholder="Leave blank for no limit">
+          </div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Minimum Land Area</label>
+            <input type="number" name="min_land" class="form-control" min="0" step="0.01" value="{{ scheme.min_land|default:'' }}" placeholder="Leave blank for no limit">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Maximum Land Area</label>
+            <input type="number" name="max_land" class="form-control" min="0" step="0.01" value="{{ scheme.max_land|default:'' }}" placeholder="Leave blank for no limit">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Land Area Unit</label>
+            <select name="land_area_unit" class="form-select">
+              <option value="sqm" {% if not editing or scheme.land_area_unit == 'sqm' %}selected{% endif %}>Square Metre (m²)</option>
+              <option value="are" {% if scheme.land_area_unit == 'are' %}selected{% endif %}>Are</option>
+              <option value="hectare" {% if scheme.land_area_unit == 'hectare' %}selected{% endif %}>Hectare</option>
+              <option value="acre" {% if scheme.land_area_unit == 'acre' %}selected{% endif %}>Acre</option>
+              <option value="cent" {% if scheme.land_area_unit == 'cent' %}selected{% endif %}>Cent</option>
+              <option value="gunta" {% if scheme.land_area_unit == 'gunta' %}selected{% endif %}>Gunta/Guntha</option>
+            </select>
+            <small class="text-muted">Both limits use this unit and are converted to m² for eligibility.</small>
+          </div>
+        </div>
+        <div class="mb-4">
+          <h5 class="fw-bold text-success">Geographical Eligibility</h5>
+          <p class="text-muted small mb-3">Choose All States or select specific states and optional districts.</p>
+
+          <input type="hidden" name="geographical_scope" id="geographical_scope" value="{{ geographical_scope|default:'all_states' }}">
+          <input type="hidden" name="all_states" id="all_states_input" value="{% if geographical_scope == 'all_states' %}1{% else %}0{% endif %}">
+
+          <div class="geo-picker">
+            <button type="button" class="geo-trigger" id="geo-trigger" aria-expanded="false">
+              <span id="geo-trigger-label">All States</span>
+              <i class="fas fa-chevron-down"></i>
+            </button>
+
+            <div class="geo-menu" id="geo-menu" aria-hidden="true">
+              <label class="geo-option all-states-option">
+                <input type="checkbox" id="all_states_checkbox" value="1" {% if geographical_scope == 'all_states' %}checked{% endif %}>
+                <span>All States</span>
+              </label>
+
+              <div class="geo-search-wrap">
+                <input type="text" class="form-control" id="state-search" placeholder="Search states...">
+              </div>
+
+              <div class="geo-state-list" id="state-option-list">
+                {% for state_option in states %}
+                <div class="state-group" data-state-id="{{ state_option.id }}">
+                  <div class="state-header">
+                    <label class="geo-option state-option">
+                      <input type="checkbox" class="state-checkbox" name="eligible_states" value="{{ state_option.id }}" {% if state_option.id in selected_state_ids %}checked{% endif %}>
+                      <span>{{ state_option.name }}</span>
+                    </label>
+                    <button type="button" class="district-toggle" data-state-id="{{ state_option.id }}" aria-expanded="false">
+                      <i class="fas fa-chevron-down"></i>
+                    </button>
+                  </div>
+
+                  <div class="district-panel" data-state-id="{{ state_option.id }}" hidden>
+                    <label class="district-select-all">
+                      <input type="checkbox" class="district-select-all-checkbox" data-state-id="{{ state_option.id }}">
+                      <span>Select All Districts</span>
+                    </label>
+                    {% for district_option in state_option.districts.all %}
+                    <label class="geo-option district-option">
+                      <input type="checkbox" class="district-checkbox" name="eligible_districts" value="{{ district_option.id }}" data-state-id="{{ state_option.id }}" {% if district_option.id in selected_district_ids %}checked{% endif %}>
+                      <span>{{ district_option.name }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <div class="selected-tags-wrap mt-3">
+            <div class="fw-semibold small text-muted mb-2">Selected Locations</div>
+            <div id="selected-location-chips" class="selected-chips"></div>
+          </div>
+
+          <small class="text-muted d-block mt-3">If a state is selected without districts, all districts in that state are eligible.</small>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Eligible Categories *</label>
+          <div class="row">
+            {% for cat in categories %}
+            <div class="col-md-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="eligible_categories" value="{{ cat.id }}" id="ecat_{{ cat.id }}" {% if cat.id in selected_category_ids %}checked{% endif %}>
+                <label class="form-check-label" for="ecat_{{ cat.id }}">{{ cat.name }}</label>
+              </div>
+            </div>
+            {% empty %}
+            <p class="text-muted small">No categories available yet. They are auto-created when farmers register.</p>
+            {% endfor %}
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">{% if editing %}Save Changes{% else %}Create Scheme{% endif %}</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_css %}
+<style>
+  .geo-picker {
+    position: relative;
+  }
+  .geo-trigger {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border: 1px solid rgba(45, 106, 79, 0.2);
+    border-radius: 12px;
+    padding: 0.8rem 1rem;
+    font-weight: 600;
+    color: #1b4332;
+  }
+  .geo-menu {
+    position: relative;
+    display: none;
+    margin-top: 0.75rem;
+    background: #f9fcfa;
+    border: 1px solid rgba(45, 106, 79, 0.12);
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  }
+  .geo-menu.open { display: block; }
+  .geo-search-wrap { margin: 0.75rem 0; }
+  .geo-option {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+    border: 1px solid rgba(45, 106, 79, 0.15);
+    background: #fff;
+    border-radius: 10px;
+    padding: 0.7rem 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 0.5rem;
+  }
+  .geo-option:hover { border-color: #2d6a4f; }
+  .geo-option input { width: 1rem; height: 1rem; accent-color: #2d6a4f; }
+  .state-group {
+    border: 1px solid rgba(45, 106, 79, 0.12);
+    background: #fff;
+    border-radius: 12px;
+    padding: 0.5rem 0.7rem;
+    margin-bottom: 0.6rem;
+  }
+  .state-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .state-option { margin-bottom: 0; }
+  .district-toggle {
+    border: none;
+    background: transparent;
+    color: #2d6a4f;
+    font-size: 0.85rem;
+  }
+  .district-panel {
+    margin-top: 0.7rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid rgba(45, 106, 79, 0.08);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 0.5rem;
+  }
+  .district-select-all {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.5rem;
+    border-radius: 8px;
+    background: #edf7f0;
+    color: #1b4332;
+    font-weight: 600;
+    margin: 0;
+  }
+  .district-option {
+    margin-bottom: 0;
+    padding: 0.5rem 0.6rem;
+  }
+  .selected-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .selection-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #ebf7ee;
+    color: #1b4332;
+    border: 1px solid rgba(45, 106, 79, 0.15);
+    border-radius: 999px;
+    padding: 0.45rem 0.8rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+  .selection-chip button {
+    border: none;
+    background: transparent;
+    color: #1b4332;
+    font-weight: 700;
+    padding: 0;
+    line-height: 1;
+  }
+</style>
+{% endblock %}
+{% block extra_js %}
+<script>
+  const trigger = document.getElementById('geo-trigger');
+  const menu = document.getElementById('geo-menu');
+  const allStatesInput = document.getElementById('all_states_input');
+  const allStatesCheckbox = document.getElementById('all_states_checkbox');
+  const stateSearch = document.getElementById('state-search');
+  const locationChipContainer = document.getElementById('selected-location-chips');
+  const triggerLabel = document.getElementById('geo-trigger-label');
+
+  function toggleGeoMenu(forceOpen) {
+    const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : !menu.classList.contains('open');
+    menu.classList.toggle('open', shouldOpen);
+    trigger.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+    menu.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+  }
+
+  trigger.addEventListener('click', function() {
+    toggleGeoMenu();
+  });
+
+  document.addEventListener('click', function(event) {
+    if (!event.target.closest('.geo-picker')) {
+      toggleGeoMenu(false);
+    }
+  });
+
+  function updateAllStatesState() {
+    const allSelected = allStatesCheckbox.checked;
+    const stateInputs = document.querySelectorAll('.state-checkbox');
+    const districtInputs = document.querySelectorAll('.district-checkbox');
+    const allDistrictToggles = document.querySelectorAll('.district-select-all-checkbox');
+
+    stateInputs.forEach((input) => {
+      input.disabled = allSelected;
+      if (allSelected) input.checked = false;
+    });
+    districtInputs.forEach((input) => {
+      input.disabled = allSelected;
+      if (allSelected) input.checked = false;
+    });
+    allDistrictToggles.forEach((input) => {
+      input.disabled = allSelected;
+      input.checked = false;
+    });
+
+    document.querySelectorAll('.district-panel').forEach((panel) => {
+      panel.hidden = allSelected || panel.dataset.stateId === undefined;
+    });
+
+    document.querySelectorAll('.district-toggle').forEach((toggle) => {
+      toggle.disabled = allSelected;
+      const panel = document.querySelector('.district-panel[data-state-id="' + toggle.dataset.stateId + '"]');
+      if (panel) {
+        const isOpen = !panel.hidden && panel.dataset.open === 'true';
+        toggle.innerHTML = isOpen ? '<i class="fas fa-chevron-up"></i>' : '<i class="fas fa-chevron-down"></i>';
+      }
+    });
+
+    allStatesInput.value = allSelected ? '1' : '0';
+    document.getElementById('geographical_scope').value = allSelected ? 'all_states' : 'selected_states';
+    updateTriggerLabel();
+    renderSelectedLocationChips();
+  }
+
+  function updateTriggerLabel() {
+    if (allStatesCheckbox.checked) {
+      triggerLabel.textContent = 'All States';
+      return;
+    }
+    const selectedStates = Array.from(document.querySelectorAll('.state-checkbox:checked'));
+    if (selectedStates.length === 0) {
+      triggerLabel.textContent = 'Select States';
+    } else if (selectedStates.length === 1) {
+      triggerLabel.textContent = selectedStates[0].closest('.state-option').textContent.trim();
+    } else {
+      triggerLabel.textContent = `${selectedStates.length} States Selected`;
+    }
+  }
+
+  function syncStateDistrictSummary(stateInput) {
+    const stateId = stateInput.value;
+    const districtPanel = document.querySelector('.district-panel[data-state-id="' + stateId + '"]');
+    if (!districtPanel) return;
+
+    if (stateInput.checked) {
+      districtPanel.hidden = false;
+      districtPanel.dataset.open = 'true';
+      const toggle = document.querySelector('.district-toggle[data-state-id="' + stateId + '"]');
+      if (toggle) toggle.innerHTML = '<i class="fas fa-chevron-up"></i>';
+    } else {
+      const checkedDistricts = districtPanel.querySelectorAll('.district-checkbox:checked');
+      if (checkedDistricts.length === 0) {
+        districtPanel.hidden = true;
+        districtPanel.dataset.open = 'false';
+      }
+      const toggle = document.querySelector('.district-toggle[data-state-id="' + stateId + '"]');
+      if (toggle) toggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
+    }
+    renderSelectedLocationChips();
+  }
+
+  function renderSelectedLocationChips() {
+    if (!locationChipContainer) return;
+    const chips = [];
+    const allStatesChecked = allStatesCheckbox.checked;
+
+    if (allStatesChecked) {
+      const chip = document.createElement('span');
+      chip.className = 'selection-chip';
+      chip.innerHTML = 'All States <button type="button" aria-label="Remove All States">&times;</button>';
+      chip.querySelector('button').addEventListener('click', function() {
+        allStatesCheckbox.checked = false;
+        updateAllStatesState();
+      });
+      chips.push(chip);
+    } else {
+      const stateInputs = document.querySelectorAll('.state-checkbox:checked');
+      stateInputs.forEach((input) => {
+        const label = input.closest('.state-option').textContent.trim();
+        const districtChecks = document.querySelectorAll('.district-checkbox[data-state-id="' + input.value + '"]:checked');
+
+        if (districtChecks.length > 0) {
+          districtChecks.forEach((districtInput) => {
+            const chip = document.createElement('span');
+            const districtLabel = districtInput.closest('.district-option').textContent.trim();
+            chip.className = 'selection-chip';
+            chip.innerHTML = `${districtLabel}, ${label} <button type="button" aria-label="Remove ${districtLabel}">&times;</button>`;
+            chip.querySelector('button').addEventListener('click', function() {
+              districtInput.checked = false;
+              if (document.querySelectorAll('.district-checkbox[data-state-id="' + input.value + '"]:checked').length === 0) {
+                input.checked = false;
+              }
+              renderSelectedLocationChips();
+            });
+            chips.push(chip);
+          });
+        } else {
+          const chip = document.createElement('span');
+          chip.className = 'selection-chip';
+          chip.innerHTML = `${label} (all districts) <button type="button" aria-label="Remove ${label}">&times;</button>`;
+          chip.querySelector('button').addEventListener('click', function() {
+            input.checked = false;
+            renderSelectedLocationChips();
+          });
+          chips.push(chip);
+        }
+      });
+    }
+
+    locationChipContainer.innerHTML = '';
+    if (!chips.length) {
+      locationChipContainer.innerHTML = '<span class="text-muted small">No locations selected</span>';
+      return;
+    }
+    chips.forEach((chip) => locationChipContainer.appendChild(chip));
+  }
+
+  document.querySelectorAll('.district-select-all-checkbox').forEach((toggle) => {
+    toggle.addEventListener('change', function() {
+      const stateId = this.dataset.stateId;
+      const districtBoxes = document.querySelectorAll('.district-checkbox[data-state-id="' + stateId + '"]');
+      const isChecked = this.checked;
+      districtBoxes.forEach((box) => {
+        box.checked = isChecked;
+      });
+      const stateInput = document.querySelector('.state-checkbox[value="' + stateId + '"]');
+      if (stateInput) {
+        stateInput.checked = true;
+      }
+      updateTriggerLabel();
+      renderSelectedLocationChips();
+    });
+  });
+
+  document.querySelectorAll('.district-checkbox').forEach((checkbox) => {
+    checkbox.addEventListener('change', function() {
+      const stateId = this.dataset.stateId;
+      const stateInput = document.querySelector('.state-checkbox[value="' + stateId + '"]');
+      if (stateInput) {
+        stateInput.checked = document.querySelectorAll('.district-checkbox[data-state-id="' + stateId + '"]:checked').length > 0 || stateInput.checked;
+      }
+      const selectAllToggle = document.querySelector('.district-select-all-checkbox[data-state-id="' + stateId + '"]');
+      if (selectAllToggle) {
+        const districtBoxes = document.querySelectorAll('.district-checkbox[data-state-id="' + stateId + '"]');
+        const allChecked = districtBoxes.length > 0 && Array.from(districtBoxes).every((box) => box.checked);
+        selectAllToggle.checked = allChecked;
+      }
+      updateTriggerLabel();
+      renderSelectedLocationChips();
+    });
+  });
+
+  document.querySelectorAll('.state-checkbox').forEach((checkbox) => {
+    checkbox.addEventListener('change', function() {
+      if (this.checked) {
+        const districtPanel = document.querySelector('.district-panel[data-state-id="' + this.value + '"]');
+        if (districtPanel) {
+          districtPanel.hidden = false;
+          districtPanel.dataset.open = 'true';
+          const toggle = document.querySelector('.district-toggle[data-state-id="' + this.value + '"]');
+          if (toggle) toggle.innerHTML = '<i class="fas fa-chevron-up"></i>';
+        }
+      } else {
+        const districtPanel = document.querySelector('.district-panel[data-state-id="' + this.value + '"]');
+        if (districtPanel) {
+          districtPanel.querySelectorAll('.district-checkbox').forEach((districtCheckbox) => {
+            districtCheckbox.checked = false;
+          });
+          const toggle = document.querySelector('.district-toggle[data-state-id="' + this.value + '"]');
+          if (toggle) toggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
+        }
+      }
+      updateTriggerLabel();
+      renderSelectedLocationChips();
+    });
+  });
+
+  document.querySelectorAll('.district-toggle').forEach((toggle) => {
+    toggle.addEventListener('click', function() {
+      const stateId = this.dataset.stateId;
+      const panel = document.querySelector('.district-panel[data-state-id="' + stateId + '"]');
+      if (!panel) return;
+      const isOpen = panel.hidden;
+      panel.hidden = !isOpen;
+      panel.dataset.open = String(isOpen);
+      this.innerHTML = isOpen ? '<i class="fas fa-chevron-up"></i>' : '<i class="fas fa-chevron-down"></i>';
+    });
+  });
+
+  allStatesCheckbox.addEventListener('change', function() {
+    updateAllStatesState();
+  });
+
+  stateSearch.addEventListener('input', function() {
+    const query = this.value.toLowerCase();
+    document.querySelectorAll('.state-group').forEach((group) => {
+      const label = group.textContent.toLowerCase();
+      group.style.display = label.includes(query) ? 'block' : 'none';
+    });
+  });
+
+  renderSelectedLocationChips();
+  updateAllStatesState();
+</script>
+{% endblock %}

@@ -1,0 +1,271 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block title %}Edit Profile — FARMEX{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #f4f7f4 !important; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; margin: 0; padding: 0; }
+  .navbar { display: none !important; }
+
+  .ep-wrapper { min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* Header */
+  .ep-header {
+    background: #0d3d29;
+    padding: 0 40px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .ep-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .ep-brand-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.12); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #6ee7b7; font-size: 1.3rem; }
+  .ep-brand-name { font-size: 1.25rem; font-weight: 800; color: white; letter-spacing: 0.5px; }
+  .ep-brand-sub { font-size: 0.72rem; color: #a0b8af; }
+  .ep-back-btn { display: flex; align-items: center; gap: 8px; color: #b6d7c7; text-decoration: none; font-weight: 600; font-size: 0.9rem; padding: 8px 18px; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; transition: 0.2s; }
+  .ep-back-btn:hover { background: rgba(255,255,255,0.08); color: white; }
+
+  /* Page */
+  .ep-page { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 48px 20px; }
+  .ep-card-wrapper { width: 100%; max-width: 760px; }
+
+  /* Profile Card */
+  .ep-hero { background: linear-gradient(135deg, #0d3d29 0%, #1a5c3e 100%); border-radius: 20px 20px 0 0; padding: 36px 40px 48px; position: relative; overflow: hidden; }
+  .ep-hero::before { content: ''; position: absolute; top: -40px; right: -40px; width: 200px; height: 200px; background: rgba(255,255,255,0.04); border-radius: 50%; }
+  .ep-hero::after { content: ''; position: absolute; bottom: -20px; left: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.03); border-radius: 50%; }
+  .ep-hero-top { display: flex; align-items: center; gap: 24px; position: relative; z-index: 1; }
+  .ep-avatar { width: 72px; height: 72px; background: linear-gradient(135deg, #22c55e, #16a34a); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white; font-weight: 700; box-shadow: 0 4px 15px rgba(34,197,94,0.4); flex-shrink: 0; }
+  .ep-hero-info h1 { font-size: 1.6rem; font-weight: 800; color: white; margin: 0 0 4px; }
+  .ep-hero-info p { color: #a0cdb4; font-size: 0.9rem; margin: 0; }
+  .ep-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(34,197,94,0.2); color: #6ee7b7; padding: 4px 12px; border-radius: 99px; font-size: 0.78rem; font-weight: 600; margin-top: 8px; border: 1px solid rgba(34,197,94,0.25); }
+
+  /* Form Card */
+  .ep-form-card { background: white; border-radius: 0 0 20px 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.08); margin-top: -1px; }
+
+  .ep-section-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0d3d29; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #f0fdf4; display: flex; align-items: center; gap: 8px; }
+  .ep-section-title i { font-size: 0.9rem; }
+
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .form-grid-1 { display: grid; grid-template-columns: 1fr; gap: 20px; }
+
+  .form-field { display: flex; flex-direction: column; }
+  .form-field label { font-size: 0.82rem; font-weight: 600; color: #374151; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .form-field label i { color: #15803d; font-size: 0.85rem; }
+  .form-field input, .form-field textarea, .form-field select {
+    padding: 11px 14px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    font-family: inherit;
+    color: #1e293b;
+    background: #fafafa;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .form-field input:focus, .form-field textarea:focus {
+    border-color: #15803d;
+    box-shadow: 0 0 0 3px rgba(21,128,61,0.1);
+    background: white;
+  }
+  .form-field textarea { resize: vertical; min-height: 90px; }
+
+  /* Categories */
+  .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .cat-item { position: relative; }
+  .cat-item input[type=checkbox] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .cat-label {
+    display: flex; align-items: center; justify-content: center;
+    padding: 9px 8px; border: 1.5px solid #e5e7eb; border-radius: 8px;
+    font-size: 0.78rem; font-weight: 600; color: #475569;
+    cursor: pointer; text-align: center; transition: 0.18s;
+    background: #fafafa;
+  }
+  .cat-item input:checked + .cat-label { border-color: #15803d; background: #f0fdf4; color: #15803d; }
+  .cat-label:hover { border-color: #15803d; background: #f0fdf4; }
+
+  .ep-divider { border: none; border-top: 1px solid #f1f5f9; margin: 30px 0; }
+
+  /* Buttons */
+  .ep-actions { display: flex; gap: 14px; justify-content: flex-end; margin-top: 32px; }
+  .btn-ep-cancel { padding: 11px 28px; border: 1.5px solid #e5e7eb; border-radius: 10px; background: white; color: #475569; font-weight: 600; font-size: 0.92rem; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+  .btn-ep-cancel:hover { background: #f9fafb; color: #1e293b; }
+  .btn-ep-save { padding: 11px 32px; background: linear-gradient(135deg, #15803d, #0d3d29); border: none; border-radius: 10px; color: white; font-weight: 700; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 14px rgba(15,91,53,0.3); }
+  .btn-ep-save:hover { background: linear-gradient(135deg, #166534, #0d3d29); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(15,91,53,0.35); }
+
+  .alert-ep { padding: 12px 16px; border-radius: 10px; font-size: 0.88rem; font-weight: 500; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px; }
+  .alert-ep-danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  .alert-ep-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+  @media (max-width: 600px) {
+    .form-grid-2, .cat-grid { grid-template-columns: 1fr 1fr; }
+    .ep-hero, .ep-form-card { padding: 24px 20px; }
+    .ep-page { padding: 20px 12px; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+{% load static %}
+<div class="ep-wrapper">
+  <header class="ep-header">
+    <a href="{% url 'farmer_dashboard' %}" class="ep-brand">
+      <div class="ep-brand-icon"><i class="fas fa-leaf"></i></div>
+      <div>
+        <div class="ep-brand-name">FARMEX</div>
+        <div class="ep-brand-sub">Subsidy Integrity Platform</div>
+      </div>
+    </a>
+    <a href="{% url 'farmer_dashboard' %}" class="ep-back-btn">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+  </header>
+
+  <div class="ep-page">
+    <div class="ep-card-wrapper">
+
+      <!-- Messages -->
+      {% for message in messages %}
+      <div class="alert-ep {% if message.tags == 'error' %}alert-ep-danger{% else %}alert-ep-success{% endif %} mb-3">
+        <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
+        <span>{{ message }}</span>
+      </div>
+      {% endfor %}
+
+      <!-- Hero Banner -->
+      <div class="ep-hero">
+        <div class="ep-hero-top">
+          <div class="ep-avatar">{{ farmer.full_name|first|upper }}</div>
+          <div class="ep-hero-info">
+            <h1>{{ farmer.full_name }}</h1>
+            <p>{{ farmer.user.email }}</p>
+            <div class="ep-badge"><i class="fas fa-seedling"></i> Farmer Account</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="ep-form-card">
+        <form method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <div class="ep-section-title"><i class="fas fa-user"></i> Personal Information</div>
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label><i class="fas fa-user"></i> Full Name</label>
+              <input type="text" name="full_name" value="{{ farmer.full_name }}" required placeholder="Your full name" maxlength="100">
+            </div>
+            <div class="form-field">
+              <label><i class="fas fa-phone"></i> Phone Number</label>
+              <input type="text" name="phone" value="{{ farmer.phone }}" required placeholder="10-digit mobile number" maxlength="10">
+            </div>
+          <div class="form-field">
+            <label><i class="fas fa-id-card"></i> Aadhaar Number</label>
+            <input type="text" name="aadhaar" value="{{ farmer.aadhaar }}" disabled style="background:#f1f5f9; color:#94a3b8; cursor:not-allowed;" placeholder="12-digit Aadhaar" maxlength="12">
+            <small style="color:#94a3b8; font-size:0.75rem; margin-top:4px;">Aadhaar number cannot be changed here </small>
+          </div>
+            <div class="form-field">
+              <label><i class="fas fa-envelope"></i> Email Address</label>
+              <input type="email" value="{{ farmer.user.email }}" disabled style="background:#f1f5f9; color:#94a3b8; cursor:not-allowed;">
+              <small style="color:#94a3b8; font-size:0.75rem; margin-top:4px;">Email cannot be changed here</small>
+            </div>
+          </div>
+
+          <div class="form-grid-1 mt-3">
+            <div class="form-field">
+              <label><i class="fas fa-map-marker-alt"></i> Address</label>
+              <textarea name="address" required placeholder="Your complete address">{{ farmer.address }}</textarea>
+            </div>
+          </div>
+
+          <div class="form-grid-2 mt-3">
+            <div class="form-field">
+              <label><i class="fas fa-map"></i> State</label>
+              <select name="state" id="profile-state" required>
+                <option value="">Select state</option>
+                {% for state_option in states %}
+                <option value="{{ state_option.id }}" {% if selected_state == state_option.id|stringformat:'s' %}selected{% endif %}>{{ state_option.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-field">
+              <label><i class="fas fa-location-dot"></i> District</label>
+              <select name="district" id="profile-district" required>
+                <option value="">Select district</option>
+                {% for state_option in states %}
+                  {% for district_option in state_option.districts.all %}
+                  <option value="{{ district_option.id }}" data-state-id="{{ state_option.id }}" {% if selected_district == district_option.id|stringformat:'s' %}selected{% endif %}>{{ district_option.name }}</option>
+                  {% endfor %}
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <hr class="ep-divider">
+          <div class="ep-section-title"><i class="fas fa-chart-line"></i> Farm Details</div>
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label><i class="fas fa-rupee-sign"></i> Annual Income (₹)</label>
+              <input type="number" name="income" value="{{ farmer.income }}" required min="0" step="0.01" placeholder="e.g. 50000">
+            </div>
+            <div class="form-field">
+              <label><i class="fas fa-tractor"></i> Land Area Value</label>
+              <input type="number" name="land_area_value" value="{{ farmer.land_area_value|default:farmer.land_size }}" required min="0.0001" step="0.0001" placeholder="e.g. 5.5">
+            </div>
+            <div class="form-field">
+              <label><i class="fas fa-ruler-combined"></i> Land Area Unit</label>
+              <select name="land_area_unit" required>
+                <option value="sqm" {% if farmer.land_area_unit == 'sqm' %}selected{% endif %}>Square Metre (m²)</option>
+                <option value="are" {% if farmer.land_area_unit == 'are' %}selected{% endif %}>Are</option>
+                <option value="hectare" {% if farmer.land_area_unit == 'hectare' %}selected{% endif %}>Hectare</option>
+                <option value="acre" {% if not farmer.land_area_unit or farmer.land_area_unit == 'acre' %}selected{% endif %}>Acre</option>
+                <option value="cent" {% if farmer.land_area_unit == 'cent' %}selected{% endif %}>Cent</option>
+                <option value="gunta" {% if farmer.land_area_unit == 'gunta' %}selected{% endif %}>Gunta/Guntha</option>
+              </select>
+            </div>
+          </div>
+
+          <hr class="ep-divider">
+          <div class="ep-section-title"><i class="fas fa-tags"></i> Farming Categories</div>
+          <div class="cat-grid">
+            {% for cat in categories %}
+            <div class="cat-item">
+              <input type="checkbox" id="cat_{{ forloop.counter }}" name="categories" value="{{ cat.name }}"
+                {% if cat.name in selected_categories %}checked{% endif %}>
+              <label class="cat-label" for="cat_{{ forloop.counter }}">{{ cat.name }}</label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="ep-actions">
+            <a href="{% url 'farmer_dashboard' %}" class="btn-ep-cancel">
+              <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn-ep-save">
+              <i class="fas fa-save"></i> Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const profileState = document.getElementById('profile-state');
+  const profileDistrict = document.getElementById('profile-district');
+  function filterProfileDistricts() {
+    const stateId = profileState.value;
+    Array.from(profileDistrict.options).forEach((option) => {
+      if (!option.value) return;
+      option.hidden = option.dataset.stateId !== stateId;
+    });
+    if (profileDistrict.selectedOptions[0] && profileDistrict.selectedOptions[0].hidden) {
+      profileDistrict.value = '';
+    }
+  }
+  profileState.addEventListener('change', filterProfileDistricts);
+  filterProfileDistricts();
+</script>
+{% endblock %}
